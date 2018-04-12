@@ -1,4 +1,4 @@
-package com.compile;
+package com.compiler;
 
 import java.io.BufferedReader;
 import java.io.File;
@@ -114,7 +114,7 @@ public class LexicalAnalyzer {
 	    		recogDelimiter(curChar);
 	    	}
 	    	else {
-	    		System.out.print((char)curChar + "is not a valid character!");
+	    		System.out.print((char)curChar + " is not a valid character!");
 	    		curChar = srcReader.read();
 	    		charNum++;
 	    	}

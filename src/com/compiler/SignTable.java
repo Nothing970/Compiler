@@ -1,4 +1,4 @@
-package com.compile;
+package com.compiler;
 
 import java.io.BufferedWriter;
 import java.io.FileWriter;

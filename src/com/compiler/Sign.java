@@ -1,4 +1,4 @@
-package com.compile;
+package com.compiler;
 
 public class Sign {
 	public String idName;

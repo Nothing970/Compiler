@@ -1,0 +1,74 @@
+Type -> INT
+Expr2 -> ID
+Expr1 -> Expr2
+Expr -> Expr1
+Const -> INTCONST
+Expr2 -> Const
+Expr1 -> Expr2
+Expr -> Expr + Expr1
+Id2 -> ID = Expr
+Idlist -> Id2
+DeclareS -> Type Idlist ;
+Expr2 -> ID
+Expr1 -> Expr2
+Expr -> Expr1
+Condop -> ==
+Const -> INTCONST
+Expr2 -> Const
+Expr1 -> Expr2
+Expr -> Expr1
+CondE -> Expr Condop Expr
+BoolE3 -> CondE
+BoolE2 -> BoolE3
+BoolE1 -> BoolE2
+BoolE -> BoolE1
+Expr2 -> ID
+Expr1 -> Expr2
+Expr -> Expr1
+Expr2 -> ID
+Expr1 -> Expr2
+Expr -> Expr + Expr1
+Condop -> ==
+Const -> INTCONST
+Expr2 -> Const
+Expr1 -> Expr2
+Expr -> Expr1
+CondE -> Expr Condop Expr
+BoolE3 -> CondE
+BoolE2 -> BoolE3
+BoolE1 -> BoolE2
+Expr2 -> ID
+Expr1 -> Expr2
+Expr -> Expr1
+Condop -> ==
+Const -> INTCONST
+Expr2 -> Const
+Expr1 -> Expr2
+Expr -> Expr1
+CondE -> Expr Condop Expr
+BoolE3 -> CondE
+BoolE2 -> BoolE3
+BoolE1 -> BoolE1 && BoolE2
+BoolE -> BoolE1
+Type -> INT
+Expr2 -> ID
+Expr1 -> Expr2
+Expr -> Expr1
+Expr2 -> ID
+Expr1 -> Expr2
+Const -> INTCONST
+Expr2 -> Const
+Expr1 -> Expr1 * Expr2
+Expr -> Expr + Expr1
+Id2 -> ID = Expr
+Idlist -> Id2
+DeclareS -> Type Idlist ;
+StartS -> @
+StartS -> DeclareS StartS
+IfS -> IF ( BoolE ) { StartS }
+StartS -> @
+StartS -> IfS StartS
+WhileS -> WHILE ( BoolE ) { StartS }
+StartS -> @
+StartS -> WhileS StartS
+StartS -> DeclareS StartS
