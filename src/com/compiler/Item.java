@@ -2,7 +2,7 @@ package com.compiler;
 
 import java.util.ArrayList;
 
-public class Item {
+public class Item implements Comparable<Item>{
 	public String variable;
 	public ArrayList<String> state;
 	public String expecSymbol;
@@ -36,4 +36,20 @@ public class Item {
         return false;
     }
 
+	@Override
+	public int compareTo(Item o) {
+		String selfStr = this.variable;
+		for(String str : state) {
+			selfStr = selfStr + str;
+		}
+		selfStr = selfStr + this.expecSymbol;
+		String oStr = o.variable;
+		for(String str : o.state) {
+			oStr = oStr + str;
+		}
+		oStr = oStr + o.expecSymbol;
+		return selfStr.compareTo(oStr);
+	}
+
+	
 }

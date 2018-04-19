@@ -1,74 +1,51 @@
+读入INT转移到6
 Type -> INT
-Expr2 -> ID
-Expr1 -> Expr2
-Expr -> Expr1
-Const -> INTCONST
-Expr2 -> Const
-Expr1 -> Expr2
-Expr -> Expr + Expr1
-Id2 -> ID = Expr
-Idlist -> Id2
-DeclareS -> Type Idlist ;
-Expr2 -> ID
-Expr1 -> Expr2
-Expr -> Expr1
-Condop -> ==
-Const -> INTCONST
-Expr2 -> Const
-Expr1 -> Expr2
-Expr -> Expr1
-CondE -> Expr Condop Expr
-BoolE3 -> CondE
-BoolE2 -> BoolE3
-BoolE1 -> BoolE2
-BoolE -> BoolE1
-Expr2 -> ID
-Expr1 -> Expr2
-Expr -> Expr1
-Expr2 -> ID
-Expr1 -> Expr2
-Expr -> Expr + Expr1
-Condop -> ==
-Const -> INTCONST
-Expr2 -> Const
-Expr1 -> Expr2
-Expr -> Expr1
-CondE -> Expr Condop Expr
-BoolE3 -> CondE
-BoolE2 -> BoolE3
-BoolE1 -> BoolE2
-Expr2 -> ID
-Expr1 -> Expr2
-Expr -> Expr1
-Condop -> ==
-Const -> INTCONST
-Expr2 -> Const
-Expr1 -> Expr2
-Expr -> Expr1
-CondE -> Expr Condop Expr
-BoolE3 -> CondE
-BoolE2 -> BoolE3
-BoolE1 -> BoolE1 && BoolE2
-BoolE -> BoolE1
+读入ID转移到9
+读入(转移到10
+读入INT转移到6
 Type -> INT
-Expr2 -> ID
-Expr1 -> Expr2
-Expr -> Expr1
-Expr2 -> ID
-Expr1 -> Expr2
+读入ID转移到14
+读入,转移到16
+读入FLOAT转移到4
+Type -> FLOAT
+读入ID转移到42
+ParaList1 -> Type ID
+ParaList -> Type ID , ParaList1
+读入)转移到13
+读入{转移到15
+读入INT转移到6
+Type -> INT
+读入ID转移到34
+读入[转移到47
+读入INTCONST转移到83
+读入]转移到143
+Id3 -> ID [ INTCONST ]
+Idlist -> Id3
+读入;转移到46
+DeclareS -> Type Idlist ;
+读入ID转移到23
+读入(转移到38
+读入ID转移到60
+CallParaList -> ID
+读入)转移到110
+读入;转移到172
+Sen -> @
+Sen -> ID ( CallParaList ) ; Sen
+Sen -> DeclareS Sen
+读入RETURN转移到36
+读入ID转移到55
+读入[转移到99
+读入INTCONST转移到162
 Const -> INTCONST
 Expr2 -> Const
-Expr1 -> Expr1 * Expr2
-Expr -> Expr + Expr1
-Id2 -> ID = Expr
-Idlist -> Id2
-DeclareS -> Type Idlist ;
-StartS -> @
-StartS -> DeclareS StartS
-IfS -> IF ( BoolE ) { StartS }
-StartS -> @
-StartS -> IfS StartS
-WhileS -> WHILE ( BoolE ) { StartS }
-StartS -> @
-StartS -> WhileS StartS
-StartS -> DeclareS StartS
+Expr1 -> Expr2
+Expr -> Expr1
+读入]转移到209
+Expr2 -> ID [ Expr ]
+Expr1 -> Expr2
+Expr -> Expr1
+读入;转移到96
+读入}转移到152
+FuncDef -> Type ID ( ParaList ) { Sen RETURN Expr ; }
+FuncList -> @
+FuncList -> FuncDef FuncList

@@ -11,30 +11,42 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Set;
 import java.util.Stack;
+import java.util.TreeSet;
 
 public class SyntacticAnalyzer {
-	private static HashSet<String> SyntacticVariables = new HashSet<String>();
-	private static HashSet<String> Terminators = new HashSet<String>();
+	private static HashSet<String> SyntacticVariables = new HashSet<String>();//语法变量集
+	private static HashSet<String> Terminators = new HashSet<String>();//终结符集
+	//产生式集合，主键为语法变量，所有由这个语法变量推出的产生式存放在集合里
 	private static HashMap<String, HashSet<String>> Productions = new HashMap<String, HashSet<String>>();
-	private static String startProduction = null;
+	private static String startProduction = null;//最开始的产生式
 	
+	private static LinkedList<TreeSet<Item>> resultCollection;
+	
+	//存放状态转移的表，第一个下表为状态序号，HashMap键值为符号，整形为转移状态序号
 	private static LinkedList<HashMap<String, Integer>> goNextTable = new LinkedList<HashMap<String, Integer>>();
 	
+	//action表    goto表
 	private static LinkedList<HashMap<String, String>> actionTable = new LinkedList<HashMap<String, String>>();
 	private static LinkedList<HashMap<String, Integer>> gotoTable = new LinkedList<HashMap<String, Integer>>();
 	
+	//主控函数
  	public static void mainControl(String productionPath) throws IOException {
         initialize(productionPath);
         generateAnalysisTable();
-        //outputTables();
+        //countItem(resultCollection);
+		//judgeItemSetCollection(resultCollection);
+		//outputState();
+		//outputFirst();
+        //first("Expr");
+        outputTables();
         ArrayList<String> tokenList = generateTokenList("TokenTable.txt");
-//        for(String str : tokenList) {
-//        	System.out.println(str);
-//        }
-        //analysis(tokenList);
+        analysis(tokenList);
 	}
 	
+ 	//初始化函数，从文件读取产生式
+ 	//文件格式：第一行为所有的语法变量空格隔开，第二行为所有的终结符空格隔开，留一行空格，以下全部为产生式，右边用空格隔开
 	public static void initialize(String productionPath) throws IOException {
 		BufferedReader productionReader = new BufferedReader(new FileReader(productionPath));
 		String syntacticVariableStr = productionReader.readLine();
@@ -49,8 +61,10 @@ public class SyntacticAnalyzer {
 		production = productionReader.readLine();
 		startProduction = production;
 		while(production != null) {
+			//拆解产生式，填入集合
 			String productionLeft = production.substring(0, production.indexOf('-'));
 			String productionRight = production.substring(production.indexOf('>') + 1, production.length());
+			//判断对应语法变量是否已经拥有产生式集合
 			if(Productions.get(productionLeft) == null) {
 				HashSet<String> newSet = new HashSet<String>();
 				newSet.add(productionRight);
@@ -62,6 +76,7 @@ public class SyntacticAnalyzer {
 		}
 	}
 
+	//读取文件，生成Token序列，格式为< A , B >，每行一个
 	public static ArrayList<String> generateTokenList(String tokenPath) throws IOException {
 		BufferedReader tokenReader = new BufferedReader(new FileReader(tokenPath));
 		ArrayList<String> tokenList = new ArrayList<String>();
@@ -77,51 +92,80 @@ public class SyntacticAnalyzer {
 		return tokenList;
 	}
 	
+	//求一个字符的first集，递归调用
 	public static HashSet<String> first(String curStr) {
-//		try {
-			HashSet<String> firstSet = new HashSet<String>();
-			if(Terminators.contains(curStr)) {
-				firstSet.add(curStr);
-			}else{
-				for(String str : Productions.get(curStr)) {
-					String[] rightStrs = str.split(" ");
-					int length = rightStrs.length;
-					if(str.equals("@")) {
-						firstSet.add(str);
-					}else if(Terminators.contains(rightStrs[0])) {
-						firstSet.add(rightStrs[0]);
-					}else {
-						int i = 0;
-						for(i = 0; i < length; i++) {
-							if(!rightStrs[i].equals(curStr)) {
-								HashSet<String> nextSet = first(rightStrs[i]);
-								if(nextSet.contains("@")) {
-									nextSet.remove("@");
-									firstSet.addAll(nextSet);
-								}else {
-									firstSet.addAll(nextSet);
-									break;
-								}
+		HashSet<String> firstSet = new HashSet<String>();
+		//终结符处理
+		if(Terminators.contains(curStr)) {
+			firstSet.add(curStr);
+		}else{
+			//遍历每一个产生式
+			for(String str : Productions.get(curStr)) {
+				String[] rightStrs = str.split(" ");
+				int length = rightStrs.length;
+				//有空产生式，first集中加入空(@)
+				if(str.equals("@")) {
+					firstSet.add(str);
+				}else if(Terminators.contains(rightStrs[0])) {//产生式右边第一个为终结符
+					firstSet.add(rightStrs[0]);
+				}else {//产生式右边为语法变量
+					int i = 0;
+					for(i = 0; i < length; i++) {
+						//如果和自己相同，则跳过，避免死递归
+						if(!rightStrs[i].equals(curStr)) {
+							//获得右边字符的first集，合并过来
+							HashSet<String> nextSet = first(rightStrs[i]);
+							//右边字符的first集是否有空，有则继续下一个字符，没有则跳出
+							if(nextSet.contains("@")) {
+								nextSet.remove("@");
+								firstSet.addAll(nextSet);
+							}else {
+								firstSet.addAll(nextSet);
+								break;
 							}
+						}else {
+							break;
 						}
-						if(i == length) {
-							firstSet.add("@");
-						}
+					}
+					//判断退出循环的情况，如果是遍历所有字符退出，则加入空
+					if(i == length) {
+						firstSet.add("@");
 					}
 				}
 			}
-			return firstSet;
-//		}catch(NullPointerException e) {
-//			System.out.println("异常：" + curStr);
-//		}
-//		return SyntacticVariables;
-		
+//			if(firstSet.contains("@")) {
+//				for(String str : Productions.get(curStr)) {
+//					String[] rightStrs = str.split(" ");
+//					int length = rightStrs.length;
+//					//有空产生式，first集中加入空(@)
+//					if(!str.equals("@") && Terminators.contains(rightStrs[0])) {
+//						int i = 0;
+//						for(i = 0; i < length; i++) {
+//							if(rightStrs[i].equals(curStr)) {
+//								break;
+//							}
+//						}
+//						for(i = i + 1; i < length; i++) {
+//							HashSet<String> nextSet = first(rightStrs[i]);
+//							firstSet.addAll(nextSet);
+//							//右边字符的first集是否有空，有则继续下一个字符，没有则跳出
+//							if(!nextSet.contains("@")) {
+//								break;
+//							}
+//						}
+//					}
+//				}
+//			}
+		}
+		return firstSet;
 	}
 	
+	//求一个串的first集
 	public static HashSet<String> firstForStr(List<String> beta, String endStr) {
 		HashSet<String> firstSet = new HashSet<String>();
 		int i = 0;
 		HashSet<String> nextSet = null;
+		//对串里的字符进行遍历求first集，直至全部求出，或有一个字符的first集中不含空
 		for(i = 0; i< beta.size(); i++) {
 			nextSet = first(beta.get(i));
 			if(nextSet.contains("@")) {
@@ -132,17 +176,21 @@ public class SyntacticAnalyzer {
 				break;
 			}
 		}
+		//判断退出循环条件，如果是遍历退出，则加入endStr，此时表明beta集可推出空
 		if(i == beta.size()) {
 			firstSet.add(endStr);
 		}
 		return firstSet;
 	}
 	
-	public static void closure(LinkedList<Item> itemList) {
+	//求集合闭包，使用TreeSet作为闭包避免放入重复元素
+	public static TreeSet<Item> closure(LinkedList<Item> itemList) {
+		TreeSet<Item> itemClosure = new TreeSet<Item>();
 		int size = itemList.size();
 		int i = 0;
 		for(i = 0; i < size; i++) {
 			Item curItem = itemList.get(i);
+			itemClosure.add(curItem);
 			int position = curItem.position;
 			if(position + 1 == curItem.state.size()) {
 				continue;
@@ -168,14 +216,13 @@ public class SyntacticAnalyzer {
 				}
 			}
 		}
+		return itemClosure;
 	}
 
-	public static LinkedList<Item> go(LinkedList<Item> itemList, String nextStr) {
+	public static TreeSet<Item> go(TreeSet<Item> itemSet, String nextStr) {
+		TreeSet<Item> itemClosure = new TreeSet<Item>();
 		LinkedList<Item> resultList = new LinkedList<Item>();
-		int i = 0;
-		int size = itemList.size();
-		for(i = 0; i < size; i++) {
-			Item curItem = itemList.get(i);
+		for(Item curItem : itemSet) {
 			int position = curItem.position;
 			if(position + 1 == curItem.state.size()) {
 				continue;
@@ -194,12 +241,13 @@ public class SyntacticAnalyzer {
 				resultList.add(newItem);
 			}
 		}
-		closure(resultList);
-		return resultList;
+		itemClosure = closure(resultList);
+		return itemClosure;
 	}
 
-	public static LinkedList<LinkedList<Item>> itemSetCollection() {
-		LinkedList<LinkedList<Item>> resultList = new LinkedList<LinkedList<Item>>();
+	public static LinkedList<TreeSet<Item>> itemSetCollection() {
+		//LinkedList<LinkedList<Item>> stateList = new LinkedList<LinkedList<Item>>();
+		LinkedList<TreeSet<Item>> resultList = new LinkedList<TreeSet<Item>>();
 		String startLeft = startProduction.substring(0, startProduction.indexOf('-'));
 		String startRight = startProduction.substring(startProduction.indexOf('>') + 1, startProduction.length());
 		ArrayList<String> newState = new ArrayList<String>();
@@ -207,36 +255,74 @@ public class SyntacticAnalyzer {
 		newState.add(startRight);
 		Item newItem = new Item(startLeft, newState, "#");
 		LinkedList<Item> startState = new LinkedList<Item>();
+		TreeSet<Item> startClosure = new TreeSet<Item>();
 		startState.add(newItem);
-		closure(startState);
-		resultList.add(startState);
+		startClosure = closure(startState);
+		//stateList.add(startState);
+		resultList.add(startClosure);
 		int size = resultList.size();
 		for(int i = 0; i < size; i++) {
 			HashMap<String, Integer> newMap = new HashMap<String, Integer>();
 			goNextTable.add(newMap);
 			for(String variable : SyntacticVariables) {
-				LinkedList<Item> newList = go(resultList.get(i), variable);
-				if(newList.size() != 0 && !resultList.contains(newList)) {
-					resultList.add(newList);
+				TreeSet<Item> newSet = go(resultList.get(i), variable);
+//				if(contain(resultList,newSet)==-1) {
+//					resultList.add(newSet);
+//					//System.out.println(size);
+//					size++;
+//				}
+				if(newSet.size() != 0 && !resultList.contains(newSet)) {
+					//stateList.add(stateList.get(i));
+					resultList.add(newSet);
+					//System.out.println(size);
 					size++;
 				}
-				goNextTable.get(i).put(variable, resultList.indexOf(newList));
+				if(resultList.contains(newSet)) {
+					goNextTable.get(i).put(variable, resultList.indexOf(newSet));	
+				}
 			}
 			for(String terminator : Terminators) {
-				LinkedList<Item> newList = go(resultList.get(i), terminator);
-				if(newList.size() != 0 && !resultList.contains(newList)) {
-					resultList.add(newList);
+				TreeSet<Item> newSet = go(resultList.get(i), terminator);
+//				if(contain(resultList,newSet)==-1) {
+//					resultList.add(newSet);
+//					//System.out.println(size);
+//					size++;
+//				}
+				if(newSet.size() != 0 && !resultList.contains(newSet)) {
+					//stateList.add(stateList.get(i));
+					resultList.add(newSet);
+					//System.out.println(size);
 					size++;
 				}
-				goNextTable.get(i).put(terminator, resultList.indexOf(newList));
+				if(resultList.contains(newSet)) {
+					goNextTable.get(i).put(terminator, resultList.indexOf(newSet));
+				}
 			}
 		}
 		return resultList;
 	}
 
-	public static void generateAnalysisTable() {
-		LinkedList<LinkedList<Item>> resultCollection = itemSetCollection();
-		judgeItemSetCollection(resultCollection);
+	public static int contain(LinkedList<TreeSet<Item>> resultList, TreeSet<Item> newSet) {
+		int ret =-1;
+		int flag = 0;
+		for(int i = 0; i < resultList.size(); i++) {
+			TreeSet<Item> aset = resultList.get(i);
+			for(Item j : newSet) {
+				if(!aset.contains(j)) {
+					flag = 1;
+					break;
+				}
+			}
+			if(flag == 0) {
+				ret = i;
+			}
+		}
+		return ret;
+	}
+	
+	public static void generateAnalysisTable() throws IOException {
+		//LinkedList<TreeSet<Item>> resultCollection = itemSetCollection();
+		resultCollection = itemSetCollection();
 		for(int i = 0; i < resultCollection.size(); i++) {
 			HashMap<String, String> newActionMap = new HashMap<String, String>();
 			actionTable.add(newActionMap);
@@ -244,9 +330,8 @@ public class SyntacticAnalyzer {
 			gotoTable.add(newGotoMap);
 		}
 		for(int i = 0; i < resultCollection.size(); i++) {
-			LinkedList<Item> curItemList = resultCollection.get(i);
-			for(int j =0 ; j < curItemList.size(); j++) {
-				Item curItem = curItemList.get(j);
+			TreeSet<Item> curItemSet = resultCollection.get(i);
+			for(Item curItem : curItemSet) {
 				int position = curItem.position;
 				if(position + 1 == curItem.state.size()) {
 					String startLeft = startProduction.substring(0, startProduction.indexOf('-'));
@@ -289,8 +374,10 @@ public class SyntacticAnalyzer {
 			int statePop = stateStack.peek();
 			String action = actionTable.get(statePop).get(curStr);
 			if(action == null) {
-				System.out.println("error : " + curStr);
-				return;
+				System.err.println("error : " + curStr);
+				out.write("error : " + curStr + "\r\n");
+				i++;
+				continue;
 			}else if(action.equals("acc")) {
 				out.close();
 				return;
@@ -309,6 +396,7 @@ public class SyntacticAnalyzer {
 				stateStack.push(gotoTable.get(statePop).get(curStr));
 				out.write(action + "\r\n");
 			}else {
+				out.write("读入" + curStr + "转移到" + Integer.valueOf(action) + "\r\n");
 				stateStack.push(Integer.valueOf(action));
 				strStack.push(curStr);
 				i++;
@@ -333,25 +421,95 @@ public class SyntacticAnalyzer {
 		}
 	}
 
-	public static void judgeItemSetCollection(LinkedList<LinkedList<Item>> itemSetCollection) {
+	public static void outputState() throws IOException {
+		BufferedWriter out = new BufferedWriter(new FileWriter("State.txt"));
+		for(int j = 0; j < goNextTable.size(); j++) {
+			TreeSet<Item> curSet = resultCollection.get(j);
+			out.write("State" + j + ":" + curSet.size() + " \r\n");
+			for(Item curItem : curSet) {
+				String item = "" + curItem.variable + "->";
+				for(String str : curItem.state) {
+					item = item + str;
+				}
+				item = item + "-----" + curItem.expecSymbol;
+				out.write(item + "\r\n");
+			}
+			HashMap<String, Integer> map = goNextTable.get(j);
+			Set<String> set = map.keySet();
+			for(String str : set) {
+				int next = map.get(str);
+				TreeSet<Item> nextSet = resultCollection.get(next);
+				out.write("读取" + str + "到State" + next + ":" + nextSet.size() + "\r\n");
+				for(Item curItem : nextSet) {
+					String item = "" + curItem.variable + "->";
+					for(String s : curItem.state) {
+						item = item + s;
+					}
+					item = item + "-----" + curItem.expecSymbol;
+					out.write(item + "\r\n");
+				}
+			}
+		}
+//		for(int i = 0; i < resultCollection.size(); i++) {
+//			TreeSet<Item> curSet = resultCollection.get(i);
+//			out.write("State" + i + ":" + curSet.size() + " \r\n");
+//			for(Item curItem : curSet) {
+//				String item = "" + curItem.variable + "->";
+//				for(String str : curItem.state) {
+//					item = item + str;
+//				}
+//				item = item + "-----" + curItem.expecSymbol;
+//				out.write(item + "\r\n");
+//			}
+//		}
+		out.close();
+	}
+	
+	public static void outputFirst() throws IOException {
+		BufferedWriter out = new BufferedWriter(new FileWriter("First.txt"));
+	    for(String str : SyntacticVariables) {
+	    	HashSet<String> a = first(str);
+	    	out.write(str + ": {");
+	    	for(String s : a) {
+	    		out.write(s + "    ");
+	    	}
+	    	out.write(" }\r\n");
+	    }
+	    out.close();
+	}
+	
+	public static void judgeItemSetCollection(LinkedList<TreeSet<Item>> itemSetCollection) {
+		int repeat = 0;
 		int flag = 0;
 		for(int i = 0; i < itemSetCollection.size(); i++) {
-			LinkedList<Item> aList = itemSetCollection.get(i);
-			for(int j = i + 1; j < itemSetCollection.size(); j++) {
-				LinkedList<Item> bList = itemSetCollection.get(j);
-				if(aList.size() == bList.size()) {
+			TreeSet<Item> aList = itemSetCollection.get(i);
+			for(int j = 0; j < itemSetCollection.size(); j++) {
+				if(i == j) {
+					continue;
+				}
+				TreeSet<Item> bList = itemSetCollection.get(j);
+				if(aList.size() <= bList.size()) {
 					for(Item tmp : aList) {
 						if(!bList.contains(tmp)) {
 							flag = 1;
 						}
 					}
 					if(flag == 0) {
+						repeat++;
 						System.out.println(itemSetCollection.indexOf(aList) + "  :  " + itemSetCollection.indexOf(bList));
 					}
 					flag = 0;
 				}
 			}
 		}
+		System.out.println(repeat);
 	}
 	
+	public static void countItem(LinkedList<TreeSet<Item>> itemSetCollection) {
+		int count = 0;
+		for(TreeSet<Item> itemSet : itemSetCollection) {
+			count = count + itemSet.size();
+		}
+		System.out.println(count);
+	}
 }
