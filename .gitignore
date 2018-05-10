@@ -2,8 +2,12 @@
 /bin
 /.classpath
 /.project
+/123.txt
+/asm.s
 /First.txt
+/gram.txt
 /grammar.txt
+/ID_Const_Table.txt
 /production_14.txt
 /production1.txt
 /production2.txt

@@ -1,14 +1,15 @@
 package com.compiler;
 
 import java.io.BufferedReader;
+import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileInputStream;
-import java.io.FileReader;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.LinkedList;
 
 public class LexicalAnalyzer {
 	//关键字集合
@@ -52,6 +53,7 @@ public class LexicalAnalyzer {
 	      put("REALCONST" , 37);
 	      put("CHARCONST" , 38);
 	      put("STRINGCONST" , 39);
+	      put("main" , 40);
 	}};
 	
 	
@@ -89,7 +91,7 @@ public class LexicalAnalyzer {
 	private static int curChar = 0;//主控程序当前在处理的字符
 	private static int charNum = 0;//当前读入的字符数
 	
-	private static SignTable  mySignTable = new SignTable();//符号表
+	public static ArrayList<String>  mySignTable = new ArrayList<String>();//ID和Const表
 	private static TokenTable myTokenTable = new TokenTable();//Token序列
 	
 	//主控程序
@@ -142,12 +144,9 @@ public class LexicalAnalyzer {
 			myTokenTable.addNewToken(newToken);
 		}else if(recogResult.length() > 63) {//如果不是关键字但长度超出63,输出提示信息，不放入符号表中
 			System.out.println("The length of " + recogResult + " is more than 63");
-		}else {//是合法的标识符，判断符号表中是否有相同，没有则加入符号表，最后增加Token序列
-			if(mySignTable.indexOf(recogResult) == -1) {
-				Sign newSign = new Sign(recogResult);
-				mySignTable.addNewSign(newSign);
-			}
-			Token newToken = new Token("ID", keywordMap.get("ID"), mySignTable.indexOf(recogResult));
+		}else {//是合法的标识符，加入符号表，最后增加Token序列
+			mySignTable.add(recogResult);
+			Token newToken = new Token("ID", keywordMap.get("ID"), mySignTable.lastIndexOf(recogResult));
 			myTokenTable.addNewToken(newToken);
 		}
 		//更新主控程序的当前字符，nextChar没有使用，则直接赋值
@@ -181,7 +180,7 @@ public class LexicalAnalyzer {
 		    charNum++;
 		}
 		//判断小数点后是否有数字，如没有则回退到小数点前，重新读入小数点，方便后面赋值给curChar
-		if(recogResult.length() == recogResult.indexOf('.') + 1) {
+		if(recogResult.length() == recogResult.lastIndexOf('.') + 1) {
 			recogResult = recogResult.substring(0, recogResult.length() - 1);
 			charNum = charNum - 2;
 			srcReader.reset();
@@ -199,15 +198,12 @@ public class LexicalAnalyzer {
 			recogResult = recogResult.substring(zeroHeadNum, recogResult.length());
 		}
 		//加入符号表和Token序列
-		if(mySignTable.indexOf(recogResult) == -1) {
-			Sign newSign = new Sign(recogResult);
-			mySignTable.addNewSign(newSign);
-		}
+		mySignTable.add(recogResult);
 		Token newToken = null;
 		if(point == 1) {
-			newToken = new Token("REALCONST", keywordMap.get("REALCONST"), mySignTable.indexOf(recogResult));
+			newToken = new Token("REALCONST", keywordMap.get("REALCONST"), mySignTable.lastIndexOf(recogResult));
 		}else {
-			newToken = new Token("INTCONST", keywordMap.get("INTCONST"), mySignTable.indexOf(recogResult));
+			newToken = new Token("INTCONST", keywordMap.get("INTCONST"), mySignTable.lastIndexOf(recogResult));
 		}
 		myTokenTable.addNewToken(newToken);
 		//更新主控程序的当前字符，nextChar没有使用，则直接赋值
@@ -369,11 +365,8 @@ public class LexicalAnalyzer {
 		    			curChar = nextChar;
 		    		}else {
 		    			charResult = charResult + (char)nextChar;
-		    			if(mySignTable.indexOf(charResult) == -1) {
-							Sign newSign = new Sign(charResult);
-							mySignTable.addNewSign(newSign);
-						}
-						Token newToken = new Token("CHARCONST", keywordMap.get("CHARCONST"), mySignTable.indexOf(charResult));
+						mySignTable.add(charResult);
+						Token newToken = new Token("CHARCONST", keywordMap.get("CHARCONST"), mySignTable.lastIndexOf(charResult));
 						myTokenTable.addNewToken(newToken);
 						curChar = srcReader.read();
 						charNum++;
@@ -401,11 +394,8 @@ public class LexicalAnalyzer {
     			curChar = nextChar;
 	    	}else if(nextChar == '\''){//空字符情况
 	    		charResult = charResult + (char)nextChar;
-	    		if(mySignTable.indexOf(charResult) == -1) {
-					Sign newSign = new Sign(charResult);
-					mySignTable.addNewSign(newSign);
-				}
-				Token newToken = new Token("CHARCONST", keywordMap.get("CHARCONST"), mySignTable.indexOf(charResult));
+				mySignTable.add(charResult);
+				Token newToken = new Token("CHARCONST", keywordMap.get("CHARCONST"), mySignTable.lastIndexOf(charResult));
 				myTokenTable.addNewToken(newToken);
 				curChar = srcReader.read();
 				charNum++;
@@ -419,11 +409,8 @@ public class LexicalAnalyzer {
 	    			curChar = nextChar;
 	    		}else {
 	    			charResult = charResult + (char)nextChar;
-	    			if(mySignTable.indexOf(charResult) == -1) {
-						Sign newSign = new Sign(charResult);
-						mySignTable.addNewSign(newSign);
-					}
-					Token newToken = new Token("CHARCONST", keywordMap.get("CHARCONST"), mySignTable.indexOf(charResult));
+					mySignTable.add(charResult);
+					Token newToken = new Token("CHARCONST", keywordMap.get("CHARCONST"), mySignTable.lastIndexOf(charResult));
 					myTokenTable.addNewToken(newToken);
 					curChar = srcReader.read();
 					charNum++;
@@ -451,11 +438,8 @@ public class LexicalAnalyzer {
 	    				if(lateChar == '\\') {//读入字符为转移字符，则标志置位
 	    					escaChar = 1;
 	    				}else if(lateChar == '\"' && wrongEscape == 0) {//未出错时，出现引号，字符串正常结束，加入符号表和Token序列，跳出循环
-	    					if(mySignTable.indexOf(strResult) == -1) {
-	    						Sign newSign = new Sign(strResult);
-	    						mySignTable.addNewSign(newSign);
-	    					}
-	    					Token newToken = new Token("STRINGCONST", keywordMap.get("STRINGCONST"), mySignTable.indexOf(strResult));
+	    					mySignTable.add(strResult);
+	    					Token newToken = new Token("STRINGCONST", keywordMap.get("STRINGCONST"), mySignTable.lastIndexOf(strResult));
 	    					myTokenTable.addNewToken(newToken);
 	    					break;
 	    				}else if(lateChar == '\"' && wrongEscape == 1) {//出错时，出现引号，直接跳出循环
@@ -501,7 +485,13 @@ public class LexicalAnalyzer {
 	}
 	
 	public static void outputTokenAndSign() throws IOException {
-		mySignTable.outputSign("SignTable.txt");
+		BufferedWriter out = new BufferedWriter(new FileWriter("ID_Const_Table.txt"));
+		int i = 0;
+		for(String tmpStr : mySignTable ){
+	         out.write(i + ":	" + tmpStr + "\r\n");
+	         i++;
+	    }
+		out.close();
 		myTokenTable.outputToken("TokenTable.txt");
 	}
 	

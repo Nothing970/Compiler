@@ -1,10 +1,14 @@
-Start FuncList FuncDef ParaList ParaList1 Sen CallParaList CallParaList1 DeclareS AssignS IfS IfSen WhileS Idlist Id1 Id2 Id3 Expr Expr1 Expr2 BoolE BoolE1 BoolE2 BoolE3 CondE Condop Const Type CirIfS CirSen
-BREAK CONTINUE RETURN ID IF ELSE WHILE INTCONST STRINGCONST REALCONST CHARCONST INT FLOAT STRING CHAR + - * / ( ) [ ] { } || && ! > >= < <= = == != , ;
-
-Start->FuncList
-FuncList->FuncDef FuncList
-FuncList->@
-FuncDef->Type ID ( ParaList ) { Sen RETURN Expr ; }
+S->Start
+Start->M0 MainDef
+Start->M0 FuncList MainDef
+Start->M0 DeclareS Start
+M0->@
+MainDef->INT MAIN M1 ( ParaList ) { Sen RETURN Expr ; }
+M1->@
+FuncList->FuncList FuncDef
+FuncList->FuncDef
+FuncDef->Type ID M2 ( ParaList ) { Sen RETURN Expr ; }
+M2->@
 ParaList->@
 ParaList->Type ID
 ParaList->Type ID , ParaList1
@@ -17,20 +21,17 @@ Sen->WhileS Sen
 Sen->ID ( CallParaList ) ; Sen
 Sen->@
 CallParaList->@
-CallParaList->ID
-CallParaList->ID , CallParaList1
-CallParaList1->ID
-CallParaList1->ID , CallParaList1
+CallParaList->Expr
+CallParaList->Expr , CallParaList1
+CallParaList1->Expr
+CallParaList1->Expr , CallParaList1
 DeclareS->Type Idlist ;
 Idlist->Id1
 Idlist->Id2
-Idlist->Id3
 Idlist->Id1 , Idlist
 Idlist->Id2 , Idlist
-Idlist->Id3 , Idlist
 Id1->ID
-Id2->ID = Expr
-Id3->ID [ INTCONST ]
+Id2->ID [ INTCONST ]
 AssignS->ID = Expr ;
 Expr->Expr + Expr1
 Expr->Expr - Expr1
@@ -40,7 +41,10 @@ Expr1->Expr1 / Expr2
 Expr1->Expr2
 Expr2->( Expr )
 Expr2->ID
-Expr2->Const
+Expr2->INTCONST
+Expr2->STRINGCONST
+Expr2->REALCONST
+Expr2->CHARCONST
 Expr2->ID [ Expr ]
 BoolE->BoolE1
 BoolE->BoolE || BoolE1
@@ -49,8 +53,7 @@ BoolE1->BoolE1 && BoolE2
 BoolE2->BoolE3
 BoolE2->! BoolE3
 BoolE3->( BoolE )
-BoolE3->CondE
-CondE->Expr Condop Expr
+BoolE3->Expr Condop Expr
 IfS->IF ( BoolE ) { IfSen }
 IfS->IF ( BoolE ) { IfSen } ELSE { IfSen }
 IfS->IF ( BoolE ) { IfSen } ELSE IfS
@@ -76,10 +79,6 @@ Condop-><=
 Condop->=
 Condop->==
 Condop->!=
-Const->INTCONST
-Const->STRINGCONST
-Const->REALCONST
-Const->CHARCONST
 Type->INT
 Type->FLOAT
 Type->STRING

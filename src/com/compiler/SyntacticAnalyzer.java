@@ -2,7 +2,6 @@ package com.compiler;
 
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
-import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
@@ -31,39 +30,34 @@ public class SyntacticAnalyzer {
 	private static LinkedList<HashMap<String, String>> actionTable = new LinkedList<HashMap<String, String>>();
 	private static LinkedList<HashMap<String, Integer>> gotoTable = new LinkedList<HashMap<String, Integer>>();
 	
+	public static SemanticAnalyzer semAnalyzer = new SemanticAnalyzer();
+	
 	//主控函数
  	public static void mainControl(String productionPath) throws IOException {
         initialize(productionPath);
         generateAnalysisTable();
-        //countItem(resultCollection);
-		//judgeItemSetCollection(resultCollection);
-		//outputState();
-		//outputFirst();
-        //first("Expr");
+//        //countItem(resultCollection);
+//		//judgeItemSetCollection(resultCollection);
+		outputState();
+//		//outputFirst();
+//        //first("Expr");
         outputTables();
         ArrayList<String> tokenList = generateTokenList("TokenTable.txt");
         analysis(tokenList);
+        semAnalyzer.outputIns("asm.s");
 	}
 	
  	//初始化函数，从文件读取产生式
  	//文件格式：第一行为所有的语法变量空格隔开，第二行为所有的终结符空格隔开，留一行空格，以下全部为产生式，右边用空格隔开
 	public static void initialize(String productionPath) throws IOException {
 		BufferedReader productionReader = new BufferedReader(new FileReader(productionPath));
-		String syntacticVariableStr = productionReader.readLine();
-		for(String str : syntacticVariableStr.split(" ")) {
-			SyntacticVariables.add(str);
-		}
-		String terminatorStr = productionReader.readLine();
-		for(String str : terminatorStr.split(" ")) {
-			Terminators.add(str);
-		}
 		String production = productionReader.readLine();
-		production = productionReader.readLine();
 		startProduction = production;
 		while(production != null) {
 			//拆解产生式，填入集合
 			String productionLeft = production.substring(0, production.indexOf('-'));
 			String productionRight = production.substring(production.indexOf('>') + 1, production.length());
+			SyntacticVariables.add(productionLeft);
 			//判断对应语法变量是否已经拥有产生式集合
 			if(Productions.get(productionLeft) == null) {
 				HashSet<String> newSet = new HashSet<String>();
@@ -74,6 +68,17 @@ public class SyntacticAnalyzer {
 			}
 			production = productionReader.readLine();
 		}
+		for(String synStr : SyntacticVariables) {
+			for(String producStr : Productions.get(synStr)) {
+				for(String tmpStr : producStr.split(" ")) {
+					if(!SyntacticVariables.contains(tmpStr) && !tmpStr.equals("@")) {
+						Terminators.add(tmpStr);
+					}
+				}
+				
+			}
+		}
+		productionReader.close();
 	}
 
 	//读取文件，生成Token序列，格式为< A , B >，每行一个
@@ -246,7 +251,6 @@ public class SyntacticAnalyzer {
 	}
 
 	public static LinkedList<TreeSet<Item>> itemSetCollection() {
-		//LinkedList<LinkedList<Item>> stateList = new LinkedList<LinkedList<Item>>();
 		LinkedList<TreeSet<Item>> resultList = new LinkedList<TreeSet<Item>>();
 		String startLeft = startProduction.substring(0, startProduction.indexOf('-'));
 		String startRight = startProduction.substring(startProduction.indexOf('>') + 1, startProduction.length());
@@ -258,7 +262,6 @@ public class SyntacticAnalyzer {
 		TreeSet<Item> startClosure = new TreeSet<Item>();
 		startState.add(newItem);
 		startClosure = closure(startState);
-		//stateList.add(startState);
 		resultList.add(startClosure);
 		int size = resultList.size();
 		for(int i = 0; i < size; i++) {
@@ -266,15 +269,8 @@ public class SyntacticAnalyzer {
 			goNextTable.add(newMap);
 			for(String variable : SyntacticVariables) {
 				TreeSet<Item> newSet = go(resultList.get(i), variable);
-//				if(contain(resultList,newSet)==-1) {
-//					resultList.add(newSet);
-//					//System.out.println(size);
-//					size++;
-//				}
 				if(newSet.size() != 0 && !resultList.contains(newSet)) {
-					//stateList.add(stateList.get(i));
 					resultList.add(newSet);
-					//System.out.println(size);
 					size++;
 				}
 				if(resultList.contains(newSet)) {
@@ -283,15 +279,8 @@ public class SyntacticAnalyzer {
 			}
 			for(String terminator : Terminators) {
 				TreeSet<Item> newSet = go(resultList.get(i), terminator);
-//				if(contain(resultList,newSet)==-1) {
-//					resultList.add(newSet);
-//					//System.out.println(size);
-//					size++;
-//				}
 				if(newSet.size() != 0 && !resultList.contains(newSet)) {
-					//stateList.add(stateList.get(i));
 					resultList.add(newSet);
-					//System.out.println(size);
 					size++;
 				}
 				if(resultList.contains(newSet)) {
@@ -301,27 +290,8 @@ public class SyntacticAnalyzer {
 		}
 		return resultList;
 	}
-
-	public static int contain(LinkedList<TreeSet<Item>> resultList, TreeSet<Item> newSet) {
-		int ret =-1;
-		int flag = 0;
-		for(int i = 0; i < resultList.size(); i++) {
-			TreeSet<Item> aset = resultList.get(i);
-			for(Item j : newSet) {
-				if(!aset.contains(j)) {
-					flag = 1;
-					break;
-				}
-			}
-			if(flag == 0) {
-				ret = i;
-			}
-		}
-		return ret;
-	}
 	
 	public static void generateAnalysisTable() throws IOException {
-		//LinkedList<TreeSet<Item>> resultCollection = itemSetCollection();
 		resultCollection = itemSetCollection();
 		for(int i = 0; i < resultCollection.size(); i++) {
 			HashMap<String, String> newActionMap = new HashMap<String, String>();
@@ -329,6 +299,7 @@ public class SyntacticAnalyzer {
 			HashMap<String, Integer> newGotoMap = new HashMap<String, Integer>();
 			gotoTable.add(newGotoMap);
 		}
+		int n = 0;
 		for(int i = 0; i < resultCollection.size(); i++) {
 			TreeSet<Item> curItemSet = resultCollection.get(i);
 			for(Item curItem : curItemSet) {
@@ -343,23 +314,44 @@ public class SyntacticAnalyzer {
 						for(int k = 0; k < position; k++) {
 							production = production + " " + curItem.state.get(k);
 						}
-						actionTable.get(i).put(curItem.expecSymbol, production);
+						if(actionTable.get(i).containsKey(curItem.expecSymbol) && !actionTable.get(i).get(curItem.expecSymbol).equals(production)) {
+							System.out.println(i + curItem.expecSymbol);
+							n++;
+						}else {
+							actionTable.get(i).put(curItem.expecSymbol, production);
+						}
 					}
 				}else if(Terminators.contains(curItem.state.get(position + 1))) {
 					String terminator = curItem.state.get(position + 1);
 					int nextState = goNextTable.get(i).get(terminator);
-					actionTable.get(i).put(terminator, String.valueOf(nextState));
+					if(actionTable.get(i).containsKey(terminator) && !actionTable.get(i).get(terminator).equals(String.valueOf(nextState))) {
+						System.out.println(i + terminator);
+						n++;
+					}else {
+						actionTable.get(i).put(terminator, String.valueOf(nextState));
+					}
 				}else if(SyntacticVariables.contains(curItem.state.get(position + 1))) {
 					String variable = curItem.state.get(position + 1);
 					int nextState = goNextTable.get(i).get(variable);
-					gotoTable.get(i).put(variable, nextState);
+					if(gotoTable.get(i).containsKey(variable) && !gotoTable.get(i).get(variable).equals(nextState)) {
+						System.out.println(i + variable);
+						n++;
+					}else {
+						gotoTable.get(i).put(variable, nextState);
+					}
 				}else if(curItem.state.get(position + 1).equals("@")) {
 					String production = curItem.variable;
 					production = production + " -> @";
-					actionTable.get(i).put(curItem.expecSymbol, production);
+					if(actionTable.get(i).containsKey(curItem.expecSymbol)&&!actionTable.get(i).get(curItem.expecSymbol).equals(production)) {
+						System.out.println(i + curItem.expecSymbol);
+						n++;
+					}else {
+						actionTable.get(i).put(curItem.expecSymbol, production);
+					}
 				}
 			}
 		}
+		System.out.println("Collision:" + n);
 	}
 
 	public static void analysis(ArrayList<String> tokenList) throws IOException {
@@ -369,8 +361,13 @@ public class SyntacticAnalyzer {
 		strStack.push("#");
 		stateStack.push(0);
 		int i = 0;
+		int newID = -1;
 		while(i < tokenList.size()) {
 			String curStr = tokenList.get(i);
+			if(newID != i && (curStr.equals("ID") || curStr.indexOf("CONST") != -1)) {
+				semAnalyzer.addNewIDorConst();
+				newID = i;
+			}
 			int statePop = stateStack.peek();
 			String action = actionTable.get(statePop).get(curStr);
 			if(action == null) {
@@ -394,6 +391,7 @@ public class SyntacticAnalyzer {
 				curStr = action.substring(0, action.indexOf(' '));
 				strStack.push(curStr);
 				stateStack.push(gotoTable.get(statePop).get(curStr));
+				semAnalyzer.semanticAnalysis(action);
 				out.write(action + "\r\n");
 			}else {
 				out.write("读入" + curStr + "转移到" + Integer.valueOf(action) + "\r\n");
@@ -402,6 +400,7 @@ public class SyntacticAnalyzer {
 				i++;
 			}
 		}
+		out.close();
 	}
 	
 	public static void outputTables() {

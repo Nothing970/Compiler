@@ -1,51 +1,81 @@
-读入INT转移到6
-Type -> INT
-读入ID转移到9
-读入(转移到10
-读入INT转移到6
-Type -> INT
-读入ID转移到14
-读入,转移到16
-读入FLOAT转移到4
+M0 -> @
+读入FLOAT转移到8
 Type -> FLOAT
-读入ID转移到42
-ParaList1 -> Type ID
-ParaList -> Type ID , ParaList1
-读入)转移到13
-读入{转移到15
-读入INT转移到6
-Type -> INT
-读入ID转移到34
-读入[转移到47
-读入INTCONST转移到83
-读入]转移到143
-Id3 -> ID [ INTCONST ]
-Idlist -> Id3
-读入;转移到46
-DeclareS -> Type Idlist ;
-读入ID转移到23
-读入(转移到38
-读入ID转移到60
-CallParaList -> ID
-读入)转移到110
-读入;转移到172
+读入ID转移到15
+M2 -> @
+读入(转移到31
+ParaList -> @
+读入)转移到39
+读入{转移到42
 Sen -> @
-Sen -> ID ( CallParaList ) ; Sen
-Sen -> DeclareS Sen
-读入RETURN转移到36
-读入ID转移到55
-读入[转移到99
-读入INTCONST转移到162
-Const -> INTCONST
-Expr2 -> Const
+读入RETURN转移到61
+读入REALCONST转移到78
+Expr2 -> REALCONST
 Expr1 -> Expr2
 Expr -> Expr1
-读入]转移到209
+读入;转移到109
+读入}转移到163
+FuncDef -> Type ID M2 ( ParaList ) { Sen RETURN Expr ; }
+FuncList -> FuncDef
+读入FLOAT转移到8
+Type -> FLOAT
+读入ID转移到26
+M2 -> @
+读入(转移到31
+ParaList -> @
+读入)转移到39
+读入{转移到42
+Sen -> @
+读入RETURN转移到61
+读入REALCONST转移到78
+Expr2 -> REALCONST
+Expr1 -> Expr2
+Expr -> Expr1
+读入;转移到109
+读入}转移到163
+FuncDef -> Type ID M2 ( ParaList ) { Sen RETURN Expr ; }
+FuncList -> FuncList FuncDef
+读入INT转移到10
+读入MAIN转移到20
+M1 -> @
+读入(转移到33
+读入INT转移到36
+Type -> INT
+读入ID转移到40
+读入,转移到43
+读入FLOAT转移到8
+Type -> FLOAT
+读入ID转移到67
+ParaList1 -> Type ID
+ParaList -> Type ID , ParaList1
+读入)转移到41
+读入{转移到44
+读入ID转移到51
+读入=转移到64
+读入ID转移到75
+Expr2 -> ID
+Expr1 -> Expr2
+读入/转移到111
+读入ID转移到75
+Expr2 -> ID
+Expr1 -> Expr1 / Expr2
+Expr -> Expr1
+读入;转移到130
+AssignS -> ID = Expr ;
+Sen -> @
+Sen -> AssignS Sen
+读入RETURN转移到68
+读入ID转移到75
+读入[转移到112
+读入INTCONST转移到172
+Expr2 -> INTCONST
+Expr1 -> Expr2
+Expr -> Expr1
+读入]转移到219
 Expr2 -> ID [ Expr ]
 Expr1 -> Expr2
 Expr -> Expr1
-读入;转移到96
-读入}转移到152
-FuncDef -> Type ID ( ParaList ) { Sen RETURN Expr ; }
-FuncList -> @
-FuncList -> FuncDef FuncList
+读入;转移到160
+读入}转移到218
+MainDef -> INT MAIN M1 ( ParaList ) { Sen RETURN Expr ; }
+Start -> M0 FuncList MainDef

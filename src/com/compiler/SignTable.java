@@ -6,8 +6,19 @@ import java.io.IOException;
 import java.util.LinkedList;
 
 public class SignTable {
-	public LinkedList<String> signIndex = new LinkedList<String>();
-	public LinkedList<Sign> signList = new LinkedList<Sign>();
+	public String tableName;
+	public SignTable parTable;
+	public int offset;
+	public LinkedList<String> signIndex;
+	public LinkedList<Sign> signList;
+	
+	public SignTable() {
+		this.tableName = null;
+		this.parTable = null;
+		this.offset = 0;
+		this.signIndex = new LinkedList<String>();
+		this.signList = new LinkedList<Sign>();
+	}
 	
 	public int indexOf(String indentifier) {
 		return this.signIndex.indexOf(indentifier);
@@ -19,6 +30,30 @@ public class SignTable {
 		return 1;
 	}
 
+	public Sign getSign(String indentifier) {
+		int i = this.indexOf(indentifier);
+		if(i == -1) {
+			return null;
+		}else {
+			return signList.get(i);
+		}
+	}
+
+	public static int getOffset(SignTable tmpTable, String indentifier) {
+		while(tmpTable != null) {
+			if(tmpTable.indexOf(indentifier) != -1) {
+				break;
+			}else {
+				tmpTable = tmpTable.parTable;
+			}
+		}
+		if(tmpTable == null) {
+			return -1;
+		}else {
+			return tmpTable.getSign(indentifier).offset;
+		}
+	}
+	
 	public void outputSign(String fileName) throws IOException {
 		BufferedWriter out = new BufferedWriter(new FileWriter(fileName));
 		int i = 0;
