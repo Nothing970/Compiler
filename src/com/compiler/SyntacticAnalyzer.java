@@ -364,10 +364,10 @@ public class SyntacticAnalyzer {
 		int newID = -1;
 		while(i < tokenList.size()) {
 			String curStr = tokenList.get(i);
-			if(newID != i && (curStr.equals("ID") || curStr.indexOf("CONST") != -1)) {
-				semAnalyzer.addNewIDorConst();
-				newID = i;
-			}
+//			if(newID != i && (curStr.equals("ID") || curStr.indexOf("CONST") != -1)) {
+//				semAnalyzer.addNewIDorConst();
+//				newID = i;
+//			}
 			int statePop = stateStack.peek();
 			String action = actionTable.get(statePop).get(curStr);
 			if(action == null) {
@@ -397,6 +397,10 @@ public class SyntacticAnalyzer {
 				out.write("读入" + curStr + "转移到" + Integer.valueOf(action) + "\r\n");
 				stateStack.push(Integer.valueOf(action));
 				strStack.push(curStr);
+				if((curStr.equals("ID") || curStr.indexOf("CONST") != -1)) {
+					semAnalyzer.addNewIDorConst();
+					//newID = i;
+				}
 				i++;
 			}
 		}

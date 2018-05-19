@@ -11,6 +11,8 @@ public class SignTable {
 	public int offset;
 	public LinkedList<String> signIndex;
 	public LinkedList<Sign> signList;
+	public int paras;
+	public String retType;
 	
 	public SignTable() {
 		this.tableName = null;
@@ -18,6 +20,8 @@ public class SignTable {
 		this.offset = 0;
 		this.signIndex = new LinkedList<String>();
 		this.signList = new LinkedList<Sign>();
+		this.paras = 0;
+		retType = null;
 	}
 	
 	public int indexOf(String indentifier) {

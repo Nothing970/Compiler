@@ -3,11 +3,11 @@ Start->M0 MainDef
 Start->M0 FuncList MainDef
 Start->M0 DeclareS Start
 M0->@
-MainDef->INT MAIN M1 ( ParaList ) { Sen RETURN Expr ; }
+MainDef->INT MAIN M1 ( ParaList ) { Sen M3 RETURN Expr ; }
 M1->@
 FuncList->FuncList FuncDef
 FuncList->FuncDef
-FuncDef->Type ID M2 ( ParaList ) { Sen RETURN Expr ; }
+FuncDef->Type ID M2 ( ParaList ) { Sen M3 RETURN Expr ; }
 M2->@
 ParaList->@
 ParaList->Type ID
@@ -16,10 +16,12 @@ ParaList1->Type ID
 ParaList1->Type ID , ParaList1
 Sen->DeclareS Sen
 Sen->AssignS Sen
-Sen->IfS Sen
-Sen->WhileS Sen
-Sen->ID ( CallParaList ) ; Sen
+Sen->CallS Sen
+Sen->IfS M3 Sen
+Sen->WhileS M3 Sen
 Sen->@
+CallS->ID C1 ( CallParaList ) ;
+C1->@
 CallParaList->@
 CallParaList->Expr
 CallParaList->Expr , CallParaList1
@@ -46,40 +48,42 @@ Expr2->STRINGCONST
 Expr2->REALCONST
 Expr2->CHARCONST
 Expr2->ID [ Expr ]
+Expr2->ID C1 ( CallParaList )
 BoolE->BoolE1
-BoolE->BoolE || BoolE1
+BoolE->BoolE || M3 BoolE1
 BoolE1->BoolE2
-BoolE1->BoolE1 && BoolE2
+BoolE1->BoolE1 && M3 BoolE2
 BoolE2->BoolE3
 BoolE2->! BoolE3
 BoolE3->( BoolE )
 BoolE3->Expr Condop Expr
-IfS->IF ( BoolE ) { IfSen }
-IfS->IF ( BoolE ) { IfSen } ELSE { IfSen }
-IfS->IF ( BoolE ) { IfSen } ELSE IfS
+M3->@
+IfS->IF ( BoolE ) M3 { IfSen }
+IfS->IF ( BoolE ) M3 { IfSen } N1 ELSE M3 { IfSen }
+IfS->IF ( BoolE ) M3 { IfSen } N1 ELSE M3 IfS
+N1->@
 IfSen->Sen
-IfSen->Sen RETURN Expr ;
-WhileS->WHILE ( BoolE ) { CirSen }
+IfSen->Sen M3 RETURN Expr ;
+WhileS->WHILE M4 ( BoolE ) M3 { CirSen }
+M4->@
 CirSen->DeclareS CirSen
 CirSen->AssignS CirSen
-CirSen->CirIfS CirSen
-CirSen->WhileS CirSen
+CirSen->CirIfS M3 CirSen
+CirSen->WhileS M3 CirSen
+CirSen->CallS CirSen
+CirSen->@
 CirSen->RETURN Expr ;
 CirSen->BREAK ;
 CirSen->CONTINUE ;
-CirSen->ID ( CallParaList ) ; CirSen
-CirSen->@
-CirIfS->IF ( BoolE ) { CirSen }
-CirIfS->IF ( BoolE ) { CirSen } ELSE { CirSen }
-CirIfS->IF ( BoolE ) { CirSen } ELSE CirIfS
+CirIfS->IF ( BoolE ) M3 { CirSen }
+CirIfS->IF ( BoolE ) M3 { CirSen } N1 ELSE M3 { CirSen }
+CirIfS->IF ( BoolE ) M3 { CirSen } N1 ELSE M3 CirIfS
 Condop->>
 Condop->>=
 Condop-><
 Condop-><=
-Condop->=
 Condop->==
 Condop->!=
 Type->INT
 Type->FLOAT
-Type->STRING
 Type->CHAR
