@@ -45,6 +45,7 @@ public class SyntacticAnalyzer {
         ArrayList<String> tokenList = generateTokenList("TokenTable.txt");
         analysis(tokenList);
         semAnalyzer.outputIns("asm.s");
+        //Runtime.getRuntime().exec("cmd.exe"); // 打开一个批处理文件
 	}
 	
  	//初始化函数，从文件读取产生式

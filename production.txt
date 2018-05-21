@@ -35,6 +35,7 @@ Idlist->Id2 , Idlist
 Id1->ID
 Id2->ID [ INTCONST ]
 AssignS->ID = Expr ;
+AssignS->ID [ Expr ] = Expr ;
 Expr->Expr + Expr1
 Expr->Expr - Expr1
 Expr->Expr1

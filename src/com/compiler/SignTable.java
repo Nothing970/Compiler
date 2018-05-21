@@ -13,6 +13,7 @@ public class SignTable {
 	public LinkedList<Sign> signList;
 	public int paras;
 	public String retType;
+	public int varnum;
 	
 	public SignTable() {
 		this.tableName = null;
@@ -21,6 +22,7 @@ public class SignTable {
 		this.signIndex = new LinkedList<String>();
 		this.signList = new LinkedList<Sign>();
 		this.paras = 0;
+		this.varnum = 1;
 		retType = null;
 	}
 	
@@ -53,6 +55,8 @@ public class SignTable {
 		}
 		if(tmpTable == null) {
 			return -1;
+		}else if(tmpTable.tableName.equals("global")){
+			return 0;
 		}else {
 			return tmpTable.getSign(indentifier).offset;
 		}

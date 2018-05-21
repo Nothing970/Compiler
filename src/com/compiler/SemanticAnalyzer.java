@@ -88,14 +88,15 @@ public class SemanticAnalyzer {
 				curTable.parTable = signTableStack.peek();
 				curTable.offset = 0;
 				curTable.paras = 0;
+				curTable.varnum = 1;
 				signTableStack.push(curTable);
 				String tmpIns = ".globl _main";
 				instructions.add(tmpIns);
 				tmpIns = "_main:";
 				instructions.add(tmpIns);
-				tmpIns = "\tpushl %ebp";
+				tmpIns = "pushl %ebp";
 				instructions.add(tmpIns);
-				tmpIns = "\tmovl %esp, %ebp";
+				tmpIns = "movl %esp, %ebp";
 				instructions.add(tmpIns);
 				curIns = new ArrayList<String>();
 				nextQuad = 0;
@@ -110,14 +111,15 @@ public class SemanticAnalyzer {
 				curTable.parTable = signTableStack.peek();
 				curTable.offset = 0;
 				curTable.paras = 0;
+				curTable.varnum = 1;
 				signTableStack.push(curTable);
 				String tmpIns = ".globl _" + curTable.tableName;
 				instructions.add(tmpIns);
 				tmpIns = "_" + curTable.tableName + ":";
 				instructions.add(tmpIns);
-				tmpIns = "\tpushl %ebp";
+				tmpIns = "pushl %ebp";
 				instructions.add(tmpIns);
-				tmpIns = "\tmovl %esp, %ebp";
+				tmpIns = "movl %esp, %ebp";
 				instructions.add(tmpIns);
 				curIns = new ArrayList<String>();
 				nextQuad = 0;
@@ -135,26 +137,27 @@ public class SemanticAnalyzer {
 			typeStack.push("char");
 			break;
 		case("MainDef -> INT MAIN M1 ( ParaList ) { Sen M3 RETURN Expr ; }"):
-			if(exprStack.peek().type.equals("INT")) {//!
+			if(exprStack.peek().type.indexOf("int") == -1) {//!
 				System.err.println("返回类型错误！");
 			}else {
 				Expr tmpExpr  = exprStack.pop();
 				if(tmpExpr.type.equals(curTable.retType)) {
 					SignTable tmpTable = curTable;
-					curIns.add("\tmovl " + (SignTable.getOffset(tmpTable, tmpExpr.addr) + 1) + "%(esp), %eax");
+					curIns.add("movl " + SignTable.getOffset(tmpTable, tmpExpr.addr) + "(%ebp), %eax");
 					nextQuad++;
 				}else {
-					curIns.add("\tmovl $" + tmpExpr.addr + ", %eax");
+					curIns.add("movl $" + tmpExpr.addr + ", %eax");
 					nextQuad++;
 				}
-				curIns.add("\tleave");
+				curIns.add("leave");
 				nextQuad++;
-				curIns.add("\tret");
+				curIns.add("ret");
 				nextQuad++;
 				backpatch(nextList.pop(), backLabels.pop(), backQuads.pop());
 				SignTable tmpTable = signTableStack.pop();
 				curTable = signTableStack.peek();
 				int tmpOffset = tmpTable.offset;
+				int tmpvar = tmpTable.varnum;
 				Sign tmpSign = new Sign();
 				tmpSign.idName = tmpTable.tableName;
 				tmpSign.type = "table";
@@ -162,33 +165,34 @@ public class SemanticAnalyzer {
 				tmpSign.tablePtr = tmpTable;
 				curTable.addNewSign(tmpSign);
 				curTable.offset = curTable.offset + tmpOffset;
-				String tmpIns = "\tsubl $" + tmpOffset + ", %esp ";
+				String tmpIns = "subl $" + (tmpvar*4) + ", %esp ";
 				instructions.add(tmpIns);
 				instructions.addAll(curIns);
 			}
 			break;
 		case("FuncDef -> Type ID M2 ( ParaList ) { Sen M3 RETURN Expr ; }"):
-			if(exprStack.peek().type.equals(typeStack.peek())) {//!
+			if(exprStack.peek().type.indexOf(typeStack.peek()) == -1) {//!
 				System.err.println("返回类型错误！");
 			}else {
 				Expr tmpExpr  = exprStack.pop();
 				if(tmpExpr.type.equals(curTable.retType)) {
 					SignTable tmpTable = curTable;
-					curIns.add("\tmovl " + (SignTable.getOffset(tmpTable, tmpExpr.addr) + 1) + "%(esp), %eax");
+					curIns.add("movl " + SignTable.getOffset(tmpTable, tmpExpr.addr) + "(%ebp), %eax");
 					nextQuad++;
 				}else {
-					curIns.add("\tmovl $" + tmpExpr.addr + ", %eax");
+					curIns.add("movl $" + tmpExpr.addr + ", %eax");
 					nextQuad++;
 				}
-				curIns.add("\tleave");
+				curIns.add("leave");
 				nextQuad++;
-				curIns.add("\tret");
+				curIns.add("ret");
 				nextQuad++;
 				backpatch(nextList.pop(), backLabels.pop(), backQuads.pop());
 				typeStack.pop();
 				SignTable tmpTable = signTableStack.pop();
 				curTable = signTableStack.peek();
 				int tmpOffset = tmpTable.offset;
+				int tmpvar = tmpTable.varnum;
 				Sign tmpSign = new Sign();
 				tmpSign.idName = tmpTable.tableName;
 				tmpSign.type = "table";
@@ -196,7 +200,7 @@ public class SemanticAnalyzer {
 				tmpSign.tablePtr = tmpTable;
 				curTable.addNewSign(tmpSign);
 				curTable.offset = curTable.offset + tmpOffset;
-				String tmpIns = "\tsubl $" + tmpOffset + ", %esp ";
+				String tmpIns = "subl $" + (tmpvar*4) + ", %esp ";
 				instructions.add(tmpIns);
 				instructions.addAll(curIns);
 			}
@@ -214,7 +218,7 @@ public class SemanticAnalyzer {
 					Sign tmpSign = new Sign();
 					tmpSign.idName = tmpID;
 					tmpSign.type = tmpType;
-					tmpSign.offset = curTable.offset;
+					tmpSign.offset = curTable.paras*4 + 8;
 					curTable.addNewSign(tmpSign);
 					curTable.offset = curTable.offset + 4;
 					curTable.paras++;
@@ -232,7 +236,8 @@ public class SemanticAnalyzer {
 					Sign tmpSign = new Sign();
 					tmpSign.idName = tmpID;
 					tmpSign.type = typeStack.peek();
-					tmpSign.offset = curTable.offset;
+					tmpSign.offset = curTable.varnum * -4;
+					curTable.varnum++;
 					curTable.addNewSign(tmpSign);
 					curTable.offset = curTable.offset + 4;
 				}else {
@@ -251,7 +256,8 @@ public class SemanticAnalyzer {
 					tmpSign.idName = tmpID;
 					tmpSign.type = typeStack.peek() + "_array";
 					tmpSign.dimens = tmpDimens;
-					tmpSign.offset = curTable.offset;
+					curTable.varnum = curTable.varnum + tmpDimens;
+					tmpSign.offset = (curTable.varnum - 1) * -4;
 					curTable.addNewSign(tmpSign);
 					curTable.offset = curTable.offset + 4 * tmpDimens;
 				}else {
@@ -325,12 +331,86 @@ public class SemanticAnalyzer {
 			break;
 		case("Expr2 -> ID [ Expr ]"):
 			if(true) {
-				
+				String tmpID = LexicalAnalyzer.mySignTable.get(IDStack.pop());
+				Expr tmpExpr = exprStack.pop();
+				if(tmpExpr.type.indexOf("int") != -1) {
+					SignTable tmpTable = curTable;
+					int tmpOffset = SignTable.getOffset(tmpTable, tmpID);
+					if(tmpOffset == -1) {
+						System.err.println(tmpID + "未声明!");
+					}else if(tmpOffset == 0) {
+						Expr tmpExpr1 = new Expr();
+						tmpExpr1.addr = "t" + String.valueOf(exprNum);
+						exprNum++;
+						tmpExpr1.type = curTable.parTable.getSign(tmpID).type.substring(0, curTable.parTable.getSign(tmpID).type.indexOf("_")) + "ele";
+						exprStack.push(tmpExpr1);
+						Sign tmpSign = new Sign();
+						tmpSign.idName = tmpExpr1.addr;
+						tmpSign.type = tmpExpr1.type;
+						tmpSign.offset = curTable.varnum * -4;
+						tmpSign.arrayAd = tmpID + "(, %ebx, 4)";
+						curTable.varnum++;
+						curTable.addNewSign(tmpSign);
+						curTable.offset = curTable.offset + 4;
+						if(tmpExpr.type.indexOf("const") != -1) {
+							curIns.add("movl $" + tmpExpr.addr + ", %ebx");
+							nextQuad++;
+						}else {
+							tmpTable = curTable;
+							int index = SignTable.getOffset(tmpTable, tmpExpr.addr);
+							if(index == 0) {
+								curIns.add("movl " + tmpExpr.addr + ", %ebx");
+								nextQuad++;
+							}else {
+								curIns.add("movl " + index + "(%ebp)" + ", %ebx");
+								nextQuad++;
+							}
+						}
+						curIns.add("movl " + tmpID + "(," + "%ebx, 4), %eax");
+						nextQuad++;
+						curIns.add("movl  %eax, " + tmpSign.offset + "(%ebp)");
+						nextQuad++;
+					}else {
+						Expr tmpExpr1 = new Expr();
+						tmpExpr1.addr = "t" + String.valueOf(exprNum);
+						exprNum++;
+						tmpExpr1.type = curTable.getSign(tmpID).type.substring(0, curTable.getSign(tmpID).type.indexOf("_")) + "ele";
+						exprStack.push(tmpExpr1);
+						Sign tmpSign = new Sign();
+						tmpSign.idName = tmpExpr1.addr;
+						tmpSign.type = tmpExpr1.type;
+						tmpSign.offset = curTable.varnum * -4;
+						tmpSign.arrayAd = tmpOffset + "(%ebp, %ebx, 4)";
+						curTable.varnum++;
+						curTable.addNewSign(tmpSign);
+						curTable.offset = curTable.offset + 4;
+						if(tmpExpr.type.indexOf("const") != -1) {
+							curIns.add("movl $" + tmpExpr.addr + ", %ebx");
+							nextQuad++;
+						}else {
+							tmpTable = curTable;
+							int index = SignTable.getOffset(tmpTable, tmpExpr.addr);
+							if(index == 0) {
+								curIns.add("movl " + tmpExpr.addr + ", %ebx");
+								nextQuad++;
+							}else {
+								curIns.add("movl " + index + "(%ebp)" + ", %ebx");
+								nextQuad++;
+							}
+						}
+						curIns.add("movl " + tmpOffset + "(%ebp, " + "%ebx, 4), %eax");
+						nextQuad++;
+						curIns.add("movl  %eax, " + tmpSign.offset + "(%ebp)");
+						nextQuad++;
+					}
+				}else {
+					System.err.println("数组下标出错!");
+				}
 			}
 			break;
 		case("Expr2 -> ID C1 ( CallParaList )"):
 			if(true) {
-				curIns.add("\tcall " + callID);
+				curIns.add("call _" + callID);
 				nextQuad++;
 				Expr tmpExpr = new Expr();
 				tmpExpr.addr = "t" + String.valueOf(exprNum);
@@ -340,14 +420,17 @@ public class SemanticAnalyzer {
 				Sign tmpSign = new Sign();
 				tmpSign.idName = tmpExpr.addr;
 				tmpSign.type = tmpExpr.type;
-				tmpSign.offset = curTable.offset;
+				tmpSign.offset = curTable.varnum * -4;
+				curTable.varnum++;
 				curTable.addNewSign(tmpSign);
 				curTable.offset = curTable.offset + 4;
-				curIns.add("movl %eax, " + (tmpSign.offset + 1) + "%(esp)"); 
-				for(int i = 0; i <= callParas - 1; i++) {
-					curIns.add("\tpopl %eax");
+				if(callParas != 0) {
+					curIns.add("addl $" + (callParas * 4) + ", %esp");
 					nextQuad++;
 				}
+				curIns.add("movl %eax, " + tmpSign.offset + "(%ebp)"); 
+				nextQuad++;
+				callParas = 0;
 			}
 			break;
 		case("Expr -> Expr + Expr1"):
@@ -355,87 +438,347 @@ public class SemanticAnalyzer {
 				Expr tmpExpr1 = exprStack.pop();
 				Expr tmpExpr2 = exprStack.pop();
 				Expr tmpExpr3 = new Expr();
-				if(tmpExpr1.type.indexOf("int") != -1 && tmpExpr2.type.indexOf("int") != -1) {
-					tmpExpr3.addr = "t" + String.valueOf(exprNum);
-					exprNum++;
-					tmpExpr3.type = "int";
-					exprStack.push(tmpExpr3);
-					Sign tmpSign = new Sign();
-					tmpSign.idName = tmpExpr3.addr;
-					tmpSign.type = tmpExpr3.type;
-					tmpSign.offset = curTable.offset;
-					curTable.addNewSign(tmpSign);
-					curTable.offset = curTable.offset + 4;
-//					curIns.add("\tpushl %eax");
-//					nextQuad++;
-//					curIns.add("\tpushl %edx");
-//					nextQuad++;
-					String tmpIns = null;
+				tmpExpr3.addr = "t" + String.valueOf(exprNum);
+				exprNum++;
+				exprStack.push(tmpExpr3);
+				Sign tmpSign = new Sign();
+				tmpSign.idName = tmpExpr3.addr;
+				tmpSign.offset = curTable.varnum * -4;
+				curTable.varnum++;
+				curTable.addNewSign(tmpSign);
+				curTable.offset = curTable.offset + 4;
+				if(tmpExpr1.type.indexOf("int") != -1 && tmpExpr2.type.indexOf("float") != -1) {
+					tmpExpr3.type = "float";
+					tmpSign.type = "float";
 					if(tmpExpr1.type.equals("intconst")) {
-						tmpIns= "\tmovl $" + tmpExpr1.addr + ", %eax";
+						curIns.add("movl $" + tmpExpr1.addr + ", " + tmpSign.offset +"(%ebp)");
+						nextQuad++;
+						curIns.add("fildl " + tmpSign.offset +"(%ebp)");
+						nextQuad++;
 					}else {
 						SignTable tmpTable = curTable;
-						tmpIns = "\tmovl " + (SignTable.getOffset(tmpTable, tmpExpr1.addr) + 1) + "(%esp)" + ", %eax";
+						int offset = SignTable.getOffset(tmpTable, tmpExpr1.addr);
+						if(offset == 0) {
+							curIns.add("movl " + tmpExpr1.addr + ", %eax");
+							nextQuad++;
+						}else {
+							curIns.add("movl " + offset + "(%ebp), %eax");
+							nextQuad++;
+						}
+						curIns.add("movl %eax, " + tmpSign.offset +"(%ebp)");
+						nextQuad++;
+						curIns.add("fildl " + tmpSign.offset +"(%ebp)");
+						nextQuad++;
 					}
-					curIns.add(tmpIns);
+					if(tmpExpr2.type.equals("floatconst")) {
+						data.add("LC" + dataNum + ": .float " +  tmpExpr2.addr);
+						curIns.add("fadds LC" + dataNum);
+						nextQuad++;
+						dataNum++;
+					}else {
+						SignTable tmpTable = curTable;
+						int offset = SignTable.getOffset(tmpTable, tmpExpr2.addr);
+						if(offset == 0) {
+							curIns.add("fadds " + tmpExpr2.addr);
+							nextQuad++;
+						}else {
+							curIns.add("fadds " + offset + "(%ebp)");
+							nextQuad++;
+						}
+					}
+					curIns.add("fstps " + tmpSign.offset +"(%ebp)");
 					nextQuad++;
+				}
+				if(tmpExpr1.type.indexOf("int") != -1 && tmpExpr2.type.indexOf("int") != -1) {
+					tmpExpr3.type = "int";
+					tmpSign.type = "int";
+					if(tmpExpr1.type.equals("intconst")) {
+						curIns.add("movl $" + tmpExpr1.addr + ", "  + "%eax");
+						nextQuad++;
+					}else {
+						SignTable tmpTable = curTable;
+						int offset = SignTable.getOffset(tmpTable, tmpExpr1.addr);
+						if(offset == 0) {
+							curIns.add("movl " + tmpExpr1.addr + ", %eax");
+							nextQuad++;
+						}else {
+							curIns.add("movl " + offset + "(%ebp), %eax");
+							nextQuad++;
+						}
+					}
 					if(tmpExpr2.type.equals("intconst")) {
-						tmpIns= "\tmovl $" + tmpExpr2.addr + ", %edx";
+						curIns.add("movl $" + tmpExpr2.addr + ", "  + "%edx");
+						nextQuad++;
 					}else {
 						SignTable tmpTable = curTable;
-						tmpIns = "\tmovl " + (SignTable.getOffset(tmpTable, tmpExpr2.addr) + 1) + "(%esp)" + ", %edx";
+						int offset = SignTable.getOffset(tmpTable, tmpExpr2.addr);
+						if(offset == 0) {
+							curIns.add("movl " + tmpExpr2.addr + ", %edx");
+							nextQuad++;
+						}else {
+							curIns.add("movl " + offset + "(%ebp), %edx");
+							nextQuad++;
+						}
 					}
-					curIns.add(tmpIns);
+					curIns.add("addl %edx, %eax");
 					nextQuad++;
-					curIns.add("\tleal (%eax,%edx), %eax");
+					curIns.add("movl %eax, " + tmpSign.offset + "(%ebp)");
 					nextQuad++;
-					SignTable tmpTable = curTable;
-					curIns.add("\tmovl %eax, " + (SignTable.getOffset(tmpTable, tmpExpr3.addr) + 1) + "(%esp)");
+				}
+				if(tmpExpr1.type.indexOf("float") != -1 && tmpExpr2.type.indexOf("int") != -1) {
+					tmpExpr3.type = "float";
+					tmpSign.type = "float";
+					if(tmpExpr2.type.equals("intconst")) {
+						curIns.add("movl $" + tmpExpr2.addr + ", " + tmpSign.offset +"(%ebp)");
+						nextQuad++;
+						curIns.add("fildl " + tmpSign.offset +"(%ebp)");
+						nextQuad++;
+					}else {
+						SignTable tmpTable = curTable;
+						int offset = SignTable.getOffset(tmpTable, tmpExpr2.addr);
+						if(offset == 0) {
+							curIns.add("movl " + tmpExpr2.addr + ", %eax");
+							nextQuad++;
+						}else {
+							curIns.add("movl " + offset + "(%ebp), %eax");
+							nextQuad++;
+						}
+						curIns.add("movl %eax, " + tmpSign.offset +"(%ebp)");
+						nextQuad++;
+						curIns.add("fildl " + tmpSign.offset +"(%ebp)");
+						nextQuad++;
+					}
+					if(tmpExpr1.type.equals("floatconst")) {
+						data.add("LC" + dataNum + ": .float " +  tmpExpr1.addr);
+						curIns.add("fadds LC" + dataNum);
+						nextQuad++;
+						dataNum++;
+					}else {
+						SignTable tmpTable = curTable;
+						int offset = SignTable.getOffset(tmpTable, tmpExpr1.addr);
+						if(offset == 0) {
+							curIns.add("fadds " + tmpExpr1.addr);
+							nextQuad++;
+						}else {
+							curIns.add("fadds " + offset + "(%ebp)");
+							nextQuad++;
+						}
+					}
+					curIns.add("fstps " + tmpSign.offset +"(%ebp)");
 					nextQuad++;
-//					curIns.add("\tpopl %eax");
-//					nextQuad++;
-//					curIns.add("\tpopl %edx");
-//					nextQuad++;
+				}
+				if(tmpExpr1.type.indexOf("float") != -1 && tmpExpr2.type.indexOf("float") != -1) {
+					tmpExpr3.type = "float";
+					tmpSign.type = "float";
+					if(tmpExpr2.type.equals("floatconst")) {
+						data.add("LC" + dataNum + ": .float " +  tmpExpr2.addr);
+						curIns.add("flds LC" + dataNum);
+						nextQuad++;
+						dataNum++;
+					}else {
+						SignTable tmpTable = curTable;
+						int offset = SignTable.getOffset(tmpTable, tmpExpr2.addr);
+						if(offset == 0) {
+							curIns.add("flds " + tmpExpr2.addr);
+							nextQuad++;
+						}else {
+							curIns.add("flds " + offset + "(%ebp)");
+							nextQuad++;
+						}
+					}
+					if(tmpExpr1.type.equals("floatconst")) {
+						data.add("LC" + dataNum + ": .float " +  tmpExpr1.addr);
+						curIns.add("fadds LC" + dataNum);
+						nextQuad++;
+						dataNum++;
+					}else {
+						SignTable tmpTable = curTable;
+						int offset = SignTable.getOffset(tmpTable, tmpExpr1.addr);
+						if(offset == 0) {
+							curIns.add("fadds " + tmpExpr1.addr);
+							nextQuad++;
+						}else {
+							curIns.add("fadds " + offset + "(%ebp)");
+							nextQuad++;
+						}
+					}
+					curIns.add("fstps " + tmpSign.offset +"(%ebp)");
+					nextQuad++;
 				}
 			}
 			break;
 		case("Expr -> Expr - Expr1"):
 			if(true) {
-				Expr tmpExpr1 = exprStack.pop();
 				Expr tmpExpr2 = exprStack.pop();
+				Expr tmpExpr1 = exprStack.pop();
 				Expr tmpExpr3 = new Expr();
-				if(tmpExpr1.type.indexOf("int") != -1 && tmpExpr2.type.indexOf("int") != -1) {
-					tmpExpr3.addr = "t" + String.valueOf(exprNum);
-					exprNum++;
-					tmpExpr3.type = "int";
-					exprStack.push(tmpExpr3);
-					Sign tmpSign = new Sign();
-					tmpSign.idName = tmpExpr3.addr;
-					tmpSign.type = tmpExpr3.type;
-					tmpSign.offset = curTable.offset;
-					curTable.addNewSign(tmpSign);
-					curTable.offset = curTable.offset + 4;
-					String tmpIns = null;
+				tmpExpr3.addr = "t" + String.valueOf(exprNum);
+				exprNum++;
+				exprStack.push(tmpExpr3);
+				Sign tmpSign = new Sign();
+				tmpSign.idName = tmpExpr3.addr;
+				tmpSign.offset = curTable.varnum * -4;
+				curTable.varnum++;
+				curTable.addNewSign(tmpSign);
+				curTable.offset = curTable.offset + 4;
+				if(tmpExpr1.type.indexOf("int") != -1 && tmpExpr2.type.indexOf("float") != -1) {
+					tmpExpr3.type = "float";
+					tmpSign.type = "float";
 					if(tmpExpr1.type.equals("intconst")) {
-						tmpIns= "\tmovl $" + tmpExpr1.addr + ", %eax";
+						curIns.add("movl $" + tmpExpr1.addr + ", " + tmpSign.offset +"(%ebp)");
+						nextQuad++;
+						curIns.add("fildl " + tmpSign.offset +"(%ebp)");
+						nextQuad++;
 					}else {
 						SignTable tmpTable = curTable;
-						tmpIns = "\tmovl " + (SignTable.getOffset(tmpTable, tmpExpr1.addr) + 1) + "(%esp)" + ", %eax";
+						int offset = SignTable.getOffset(tmpTable, tmpExpr1.addr);
+						if(offset == 0) {
+							curIns.add("movl " + tmpExpr1.addr + ", %eax");
+							nextQuad++;
+						}else {
+							curIns.add("movl " + offset + "(%ebp), %eax");
+							nextQuad++;
+						}
+						curIns.add("movl %eax, " + tmpSign.offset +"(%ebp)");
+						nextQuad++;
+						curIns.add("fildl " + tmpSign.offset +"(%ebp)");
+						nextQuad++;
 					}
-					curIns.add(tmpIns);
+					if(tmpExpr2.type.equals("floatconst")) {
+						data.add("LC" + dataNum + ": .float " +  tmpExpr2.addr);
+						curIns.add("fsubs LC" + dataNum);
+						nextQuad++;
+						dataNum++;
+					}else {
+						SignTable tmpTable = curTable;
+						int offset = SignTable.getOffset(tmpTable, tmpExpr2.addr);
+						if(offset == 0) {
+							curIns.add("fsubs " + tmpExpr2.addr);
+							nextQuad++;
+						}else {
+							curIns.add("fsubs " + offset + "(%ebp)");
+							nextQuad++;
+						}
+					}
+					curIns.add("fstps " + tmpSign.offset +"(%ebp)");
 					nextQuad++;
+				}
+				if(tmpExpr1.type.indexOf("int") != -1 && tmpExpr2.type.indexOf("int") != -1) {
+					tmpExpr3.type = "int";
+					tmpSign.type = "int";
+					if(tmpExpr1.type.equals("intconst")) {
+						curIns.add("movl $" + tmpExpr1.addr + ", "  + "%eax");
+						nextQuad++;
+					}else {
+						SignTable tmpTable = curTable;
+						int offset = SignTable.getOffset(tmpTable, tmpExpr1.addr);
+						if(offset == 0) {
+							curIns.add("movl " + tmpExpr1.addr + ", %eax");
+							nextQuad++;
+						}else {
+							curIns.add("movl " + offset + "(%ebp), %eax");
+							nextQuad++;
+						}
+					}
 					if(tmpExpr2.type.equals("intconst")) {
-						tmpIns= "\tmovl $" + tmpExpr2.addr + ", %edx";
+						curIns.add("movl $" + tmpExpr2.addr + ", "  + "%edx");
+						nextQuad++;
 					}else {
 						SignTable tmpTable = curTable;
-						tmpIns = "\tmovl " + (SignTable.getOffset(tmpTable, tmpExpr2.addr) + 1) + "(%esp)" + ", %edx";
+						int offset = SignTable.getOffset(tmpTable, tmpExpr2.addr);
+						if(offset == 0) {
+							curIns.add("movl " + tmpExpr2.addr + ", %edx");
+							nextQuad++;
+						}else {
+							curIns.add("movl " + offset + "(%ebp), %edx");
+							nextQuad++;
+						}
 					}
-					curIns.add(tmpIns);
+					curIns.add("subl %edx, %eax");
 					nextQuad++;
-					curIns.add("\tsubl (%eax,%edx), %eax");
+					curIns.add("movl %eax, " + tmpSign.offset + "(%ebp)");
 					nextQuad++;
-					SignTable tmpTable = curTable;
-					curIns.add("\tmovl %eax, " + (SignTable.getOffset(tmpTable, tmpExpr3.addr) + 1) + "(%esp)");
+				}
+				if(tmpExpr1.type.indexOf("float") != -1 && tmpExpr2.type.indexOf("int") != -1) {
+					tmpExpr3.type = "float";
+					tmpSign.type = "float";
+					if(tmpExpr2.type.equals("intconst")) {
+						curIns.add("movl $" + tmpExpr2.addr + ", " + tmpSign.offset +"(%ebp)");
+						nextQuad++;
+						curIns.add("fildl " + tmpSign.offset +"(%ebp)");
+						nextQuad++;
+					}else {
+						SignTable tmpTable = curTable;
+						int offset = SignTable.getOffset(tmpTable, tmpExpr2.addr);
+						if(offset == 0) {
+							curIns.add("movl " + tmpExpr2.addr + ", %eax");
+							nextQuad++;
+						}else {
+							curIns.add("movl " + offset + "(%ebp), %eax");
+							nextQuad++;
+						}
+						curIns.add("movl %eax, " + tmpSign.offset +"(%ebp)");
+						nextQuad++;
+						curIns.add("fildl " + tmpSign.offset +"(%ebp)");
+						nextQuad++;
+					}
+					if(tmpExpr1.type.equals("floatconst")) {
+						data.add("LC" + dataNum + ": .float " +  tmpExpr1.addr);
+						curIns.add("flds LC" + dataNum);
+						nextQuad++;
+						dataNum++;
+					}else {
+						SignTable tmpTable = curTable;
+						int offset = SignTable.getOffset(tmpTable, tmpExpr1.addr);
+						if(offset == 0) {
+							curIns.add("flds " + tmpExpr1.addr);
+							nextQuad++;
+						}else {
+							curIns.add("flds " + offset + "(%ebp)");
+							nextQuad++;
+						}
+					}
+					curIns.add("fsubp	%st, %st(1)");
+					nextQuad++;
+					curIns.add("fstps " + tmpSign.offset +"(%ebp)");
+					nextQuad++;
+				}
+				if(tmpExpr1.type.indexOf("float") != -1 && tmpExpr2.type.indexOf("float") != -1) {
+					tmpExpr3.type = "float";
+					tmpSign.type = "float";
+					if(tmpExpr1.type.equals("floatconst")) {
+						data.add("LC" + dataNum + ": .float " +  tmpExpr1.addr);
+						curIns.add("flds LC" + dataNum);
+						nextQuad++;
+						dataNum++;
+					}else {
+						SignTable tmpTable = curTable;
+						int offset = SignTable.getOffset(tmpTable, tmpExpr1.addr);
+						if(offset == 0) {
+							curIns.add("flds " + tmpExpr1.addr);
+							nextQuad++;
+						}else {
+							curIns.add("flds " + offset + "(%ebp)");
+							nextQuad++;
+						}
+					}
+					if(tmpExpr2.type.equals("floatconst")) {
+						data.add("LC" + dataNum + ": .float " +  tmpExpr2.addr);
+						curIns.add("fsubs LC" + dataNum);
+						nextQuad++;
+						dataNum++;
+					}else {
+						SignTable tmpTable = curTable;
+						int offset = SignTable.getOffset(tmpTable, tmpExpr2.addr);
+						if(offset == 0) {
+							curIns.add("fsubs " + tmpExpr2.addr);
+							nextQuad++;
+						}else {
+							curIns.add("fsubs " + offset + "(%ebp)");
+							nextQuad++;
+						}
+					}
+					curIns.add("fstps " + tmpSign.offset +"(%ebp)");
 					nextQuad++;
 				}
 			}
@@ -512,21 +855,127 @@ public class SemanticAnalyzer {
 				nextList.push(nList);
 				String tmpID = LexicalAnalyzer.mySignTable.get(IDStack.pop());
 				Expr tmpExpr1 = exprStack.pop();
+				if(tmpExpr1.type.equals("intconst")) {
+					curIns.add("movl $" + tmpExpr1.addr + ", %eax");
+					nextQuad++;
+				}else if(tmpExpr1.type.equals("floatconst")) {
+					data.add("LC" + dataNum + ": .float " +  tmpExpr1.addr);
+					curIns.add("movl LC" + dataNum + ", %eax");
+					nextQuad++;
+					dataNum++;
+				}else if(tmpExpr1.type.equals("charconst")) {
+					data.add("LC" + dataNum + ": .int " +  tmpExpr1.addr);
+					curIns.add("movl LC" + dataNum + ", %eax");
+					nextQuad++;
+					dataNum++;
+				}else {
+					SignTable tmpTable = curTable;
+					int offset = SignTable.getOffset(tmpTable, tmpExpr1.addr);
+					if(offset == 0) {
+						curIns.add("movl " + tmpExpr1.addr + ", %eax");
+						nextQuad++;
+					}else {
+						curIns.add("movl " + offset + "(%ebp), %eax");
+						nextQuad++;
+					}
+				}
 				SignTable tmpTable = curTable;
-				if(tmpExpr1.type.indexOf("const") == -1) {
-					String tmpIns = "\tmovl " + (SignTable.getOffset(tmpTable, tmpExpr1.addr) + 1) + "(%esp)";
-					tmpTable = curTable;
-					tmpIns = tmpIns + ", " + (SignTable.getOffset(tmpTable, tmpID) + 1) + "(%esp)";
-					curIns.add(tmpIns);
+				int offset = SignTable.getOffset(tmpTable, tmpID);
+				if(offset == 0) {
+					curIns.add("movl %eax, $" + tmpID);
 					nextQuad++;
 				}else {
-					String tmpIns = "\tmovl $" + tmpExpr1.addr;
-					tmpTable = curTable;
-					tmpIns = tmpIns + ", " + (SignTable.getOffset(tmpTable, tmpID) + 1) + "(%esp)";
-					curIns.add(tmpIns);
+					curIns.add("movl %eax, " + offset + "(%ebp)");
 					nextQuad++;
 				}
-				
+			}
+			break;
+		case("AssignS -> ID [ Expr ] = Expr ;"):
+			if(true) {
+				ArrayList<Integer> nList = new ArrayList<Integer>();
+				nextList.push(nList);
+				Expr tmpExpr2 = exprStack.pop();
+				Expr tmpExpr1 = exprStack.pop();
+				String tmpID = LexicalAnalyzer.mySignTable.get(IDStack.pop());
+				if(tmpExpr1.type.indexOf("int") != -1) {
+					if(tmpExpr2.type.indexOf("const") != -1) {
+						if(tmpExpr2.type.equals("floatconst")) {
+							data.add("LC" + dataNum + ": .float " +  tmpExpr2.addr);
+							curIns.add("movl LC" + dataNum + ", %eax");
+							nextQuad++;
+							dataNum++;
+						}else if(tmpExpr2.type.equals("charconst")) {
+							data.add("LC" + dataNum + ": .int " +  tmpExpr2.addr);
+							curIns.add("movl LC" + dataNum + ", %eax");
+							nextQuad++;
+							dataNum++;
+						}else {
+							curIns.add("movl $" + tmpExpr2.addr + ", %eax");
+							nextQuad++;
+						}
+					}else {
+						SignTable tmpTable = curTable;
+						int tmpOffset = SignTable.getOffset(tmpTable, tmpExpr2.addr);
+						if(tmpOffset == 0) {
+							curIns.add("movl " + tmpExpr2.addr + ", %eax");
+							nextQuad++;
+						}else {
+							curIns.add("movl " + tmpOffset + "(%ebp), %eax");
+							nextQuad++;
+						}
+					}
+					SignTable tmpTable = curTable;
+					int tmpOffset = SignTable.getOffset(tmpTable, tmpID);
+					if(tmpOffset == -1) {
+						System.err.println(tmpID + "未声明!");
+					}else if(tmpOffset == 0) {
+						String tmpType = curTable.parTable.getSign(tmpID).type.substring(0, curTable.parTable.getSign(tmpID).type.indexOf("_"));
+						if(tmpExpr2.type.indexOf(tmpType) != -1) {
+							if(tmpExpr1.type.indexOf("const") != -1) {
+								curIns.add("movl $" + tmpExpr1.addr + ", %ebx");
+								nextQuad++;
+							}else {
+								tmpTable = curTable;
+								int index = SignTable.getOffset(tmpTable, tmpExpr1.addr);
+								if(index == 0) {
+									curIns.add("movl " + tmpExpr1.addr + ", %ebx");
+									nextQuad++;
+								}else {
+									curIns.add("movl " + index + "(%ebp), %ebx");
+									nextQuad++;
+								}
+							}
+							curIns.add("movl %eax, " + tmpID + "(, %ebx, 4)");
+							nextQuad++;
+						}else {
+							System.err.println("数组类型出错!");
+						}
+					}else {
+						String tmpType = curTable.getSign(tmpID).type.substring(0, curTable.getSign(tmpID).type.indexOf("_"));
+						if(tmpExpr2.type.indexOf(tmpType) != -1) {
+							if(tmpExpr1.type.indexOf("const") != -1) {
+								curIns.add("movl $" + tmpExpr1.addr + ", %ebx");
+								nextQuad++;
+							}else {
+								tmpTable = curTable;
+								int index = SignTable.getOffset(tmpTable, tmpExpr1.addr);
+								if(index == 0) {
+									curIns.add("movl " + tmpExpr1.addr + ", %ebx");
+									nextQuad++;
+								}else {
+										curIns.add("movl " + index + "(%ebp)" + ", %ebx");
+										nextQuad++;
+								}
+							}
+							curIns.add("movl %eax, " + tmpOffset + "(%ebp, %ebx, 4)");
+							nextQuad++;
+						}else {
+							System.err.println("数组类型出错!");
+						}
+					}
+				}else {
+					System.err.println("数组下标出错!");
+				}
 			}
 			break;
 		case("BoolE -> BoolE || M3 BoolE1"):
@@ -568,16 +1017,223 @@ public class SemanticAnalyzer {
 			break;
 		case("BoolE3 -> Expr Condop Expr"):
 			if(true) {
+				Expr tmpExpr2 = exprStack.pop();
+				Expr tmpExpr1 = exprStack.pop();
+				Sign tmpSign = new Sign();
+				tmpSign.idName = "t" + String.valueOf(exprNum);
+				exprNum++;
+				tmpSign.offset = curTable.varnum * -4;
+				curTable.varnum++;
+				curTable.addNewSign(tmpSign);
+				curTable.offset = curTable.offset + 4;
+				if(tmpExpr1.type.indexOf("int") != -1 && tmpExpr2.type.indexOf("float") != -1) {
+					tmpSign.type = "float";
+					if(tmpExpr1.type.equals("intconst")) {
+						curIns.add("movl $" + tmpExpr1.addr + ", " + tmpSign.offset +"(%ebp)");
+						nextQuad++;
+						curIns.add("fildl " + tmpSign.offset +"(%ebp)");
+						nextQuad++;
+					}else {
+						SignTable tmpTable = curTable;
+						int offset = SignTable.getOffset(tmpTable, tmpExpr1.addr);
+						if(offset == 0) {
+							curIns.add("movl " + tmpExpr1.addr + ", %eax");
+							nextQuad++;
+						}else {
+							curIns.add("movl " + offset + "(%ebp), %eax");
+							nextQuad++;
+						}
+						curIns.add("movl %eax, " + tmpSign.offset +"(%ebp)");
+						nextQuad++;
+						curIns.add("fildl " + tmpSign.offset +"(%ebp)");
+						nextQuad++;
+					}
+					if(tmpExpr2.type.equals("floatconst")) {
+						data.add("LC" + dataNum + ": .float " +  tmpExpr2.addr);
+						curIns.add("fsubs LC" + dataNum);
+						nextQuad++;
+						dataNum++;
+					}else {
+						SignTable tmpTable = curTable;
+						int offset = SignTable.getOffset(tmpTable, tmpExpr2.addr);
+						if(offset == 0) {
+							curIns.add("fsubs " + tmpExpr2.addr);
+							nextQuad++;
+						}else {
+							curIns.add("fsubs " + offset + "(%ebp)");
+							nextQuad++;
+						}
+					}
+					curIns.add("fstps " + tmpSign.offset +"(%ebp)");
+					nextQuad++;
+				}
+				if(tmpExpr1.type.indexOf("int") != -1 && tmpExpr2.type.indexOf("int") != -1) {
+					tmpSign.type = "int";
+					if(tmpExpr1.type.equals("intconst")) {
+						curIns.add("movl $" + tmpExpr1.addr + ", "  + "%eax");
+						nextQuad++;
+					}else {
+						SignTable tmpTable = curTable;
+						int offset = SignTable.getOffset(tmpTable, tmpExpr1.addr);
+						if(offset == 0) {
+							curIns.add("movl " + tmpExpr1.addr + ", %eax");
+							nextQuad++;
+						}else {
+							curIns.add("movl " + offset + "(%ebp), %eax");
+							nextQuad++;
+						}
+					}
+					if(tmpExpr2.type.equals("intconst")) {
+						curIns.add("movl $" + tmpExpr2.addr + ", "  + "%edx");
+						nextQuad++;
+					}else {
+						SignTable tmpTable = curTable;
+						int offset = SignTable.getOffset(tmpTable, tmpExpr2.addr);
+						if(offset == 0) {
+							curIns.add("movl " + tmpExpr2.addr + ", %edx");
+							nextQuad++;
+						}else {
+							curIns.add("movl " + offset + "(%ebp), %edx");
+							nextQuad++;
+						}
+					}
+					curIns.add("subl %edx, %eax");
+					nextQuad++;
+					curIns.add("movl %eax, " + tmpSign.offset + "(%ebp)");
+					nextQuad++;
+				}
+				if(tmpExpr1.type.indexOf("float") != -1 && tmpExpr2.type.indexOf("int") != -1) {
+					tmpSign.type = "float";
+					if(tmpExpr2.type.equals("intconst")) {
+						curIns.add("movl $" + tmpExpr2.addr + ", " + tmpSign.offset +"(%ebp)");
+						nextQuad++;
+						curIns.add("fildl " + tmpSign.offset +"(%ebp)");
+						nextQuad++;
+					}else {
+						SignTable tmpTable = curTable;
+						int offset = SignTable.getOffset(tmpTable, tmpExpr2.addr);
+						if(offset == 0) {
+							curIns.add("movl " + tmpExpr2.addr + ", %eax");
+							nextQuad++;
+						}else {
+							curIns.add("movl " + offset + "(%ebp), %eax");
+							nextQuad++;
+						}
+						curIns.add("movl %eax, " + tmpSign.offset +"(%ebp)");
+						nextQuad++;
+						curIns.add("fildl " + tmpSign.offset +"(%ebp)");
+						nextQuad++;
+					}
+					if(tmpExpr1.type.equals("floatconst")) {
+						data.add("LC" + dataNum + ": .float " +  tmpExpr1.addr);
+						curIns.add("flds LC" + dataNum);
+						nextQuad++;
+						dataNum++;
+					}else {
+						SignTable tmpTable = curTable;
+						int offset = SignTable.getOffset(tmpTable, tmpExpr1.addr);
+						if(offset == 0) {
+							curIns.add("flds " + tmpExpr1.addr);
+							nextQuad++;
+						}else {
+							curIns.add("flds " + offset + "(%ebp)");
+							nextQuad++;
+						}
+					}
+					curIns.add("fsubp	%st, %st(1)");
+					nextQuad++;
+					curIns.add("fstps " + tmpSign.offset +"(%ebp)");
+					nextQuad++;
+				}
+				if(tmpExpr1.type.indexOf("float") != -1 && tmpExpr2.type.indexOf("float") != -1) {
+					tmpSign.type = "float";
+					if(tmpExpr1.type.equals("floatconst")) {
+						data.add("LC" + dataNum + ": .float " +  tmpExpr1.addr);
+						curIns.add("flds LC" + dataNum);
+						nextQuad++;
+						dataNum++;
+					}else {
+						SignTable tmpTable = curTable;
+						int offset = SignTable.getOffset(tmpTable, tmpExpr1.addr);
+						if(offset == 0) {
+							curIns.add("flds " + tmpExpr1.addr);
+							nextQuad++;
+						}else {
+							curIns.add("flds " + offset + "(%ebp)");
+							nextQuad++;
+						}
+					}
+					if(tmpExpr2.type.equals("floatconst")) {
+						data.add("LC" + dataNum + ": .float " +  tmpExpr2.addr);
+						curIns.add("fsubs LC" + dataNum);
+						nextQuad++;
+						dataNum++;
+					}else {
+						SignTable tmpTable = curTable;
+						int offset = SignTable.getOffset(tmpTable, tmpExpr2.addr);
+						if(offset == 0) {
+							curIns.add("fsubs " + tmpExpr2.addr);
+							nextQuad++;
+						}else {
+							curIns.add("fsubs " + offset + "(%ebp)");
+							nextQuad++;
+						}
+					}
+					curIns.add("fstps " + tmpSign.offset +"(%ebp)");
+					nextQuad++;
+				}
+				curIns.add("movl " + tmpSign.offset +"(%ebp), %eax");
+				nextQuad++;
+				curIns.add("cmpl $0, %eax");
+				nextQuad++;
 				ArrayList<Integer> tList = new ArrayList<Integer>();
 				ArrayList<Integer> fList = new ArrayList<Integer>();
 				tList.add(nextQuad);
 				fList.add(nextQuad + 1);
 				trueList.push(tList);
 				falseList.push(fList);
-				curIns.add("\tif true goto");
-				nextQuad++;
-				curIns.add("\tgoto");
-				nextQuad++;
+//				curIns.add("if true goto");
+//				nextQuad++;
+//				curIns.add("goto");
+//				nextQuad++;
+				switch(curCondOp) {
+				case("=="):
+					curIns.add("je");
+					nextQuad++;
+					curIns.add("jne");
+					nextQuad++;
+					break;
+				case("!="):
+					curIns.add("jne");
+					nextQuad++;
+					curIns.add("je");
+					nextQuad++;
+					break;
+				case(">"):
+					curIns.add("jg");
+					nextQuad++;
+					curIns.add("jle");
+					nextQuad++;
+					break;
+				case(">="):
+					curIns.add("jge");
+					nextQuad++;
+					curIns.add("jl");
+					nextQuad++;
+					break;
+				case("<"):
+					curIns.add("jl");
+					nextQuad++;
+					curIns.add("jge");
+					nextQuad++;
+					break;
+				case("<="):
+					curIns.add("jle");
+					nextQuad++;
+					curIns.add("jg");
+					nextQuad++;
+					break;
+				}
 			}
 			break;
 		case("Condop -> >"):
@@ -628,7 +1284,7 @@ public class SemanticAnalyzer {
 				ArrayList<Integer> nList = new ArrayList<Integer>();
 				nList.add(nextQuad);
 				nextList.push(nList);
-				curIns.add("\tjmp");
+				curIns.add("jmp");
 				nextQuad++;
 			}
 			break;
@@ -637,7 +1293,7 @@ public class SemanticAnalyzer {
 				backpatch(trueList.pop(), backLabels.pop(), backQuads.pop());
 				String tmpLabel = backLabels.pop();
 				backpatch(nextList.pop(), tmpLabel, backQuads.pop());
-				curIns.add("\tjmp " + tmpLabel);
+				curIns.add("jmp " + tmpLabel);
 				nextQuad++;
 				ArrayList<Integer> bList = breakList.pop();
 				merge(falseList.pop(), bList);
@@ -668,7 +1324,7 @@ public class SemanticAnalyzer {
 				if(tmpExpr.type.indexOf(curTable.retType) != -1) {
 					if(tmpExpr.type.equals(curTable.retType)) {
 						SignTable tmpTable = curTable;
-						curIns.add("movl " + (SignTable.getOffset(tmpTable, tmpExpr.addr) + 1) + "%(esp), %eax");
+						curIns.add("movl " + SignTable.getOffset(tmpTable, tmpExpr.addr) + "(%ebp), %eax");
 						nextQuad++;
 					}else {
 						curIns.add("movl $" + tmpExpr.addr + ", %eax");
@@ -679,6 +1335,8 @@ public class SemanticAnalyzer {
 					curIns.add("ret");
 					nextQuad++;
 					backpatch(nextList.pop(), backLabels.pop(), backQuads.pop());
+					ArrayList<Integer> nList = new ArrayList<Integer>();
+					nextList.push(nList);
 				}else {
 					System.err.println(curTable.tableName + "返回参数类型不匹配!");
 				}
@@ -712,14 +1370,14 @@ public class SemanticAnalyzer {
 				ArrayList<Integer> nList = new ArrayList<Integer>();
 				nList.add(nextQuad);
 				nextList.push(nList);
-				curIns.add("\tjmp");
+				curIns.add("jmp");
 				nextQuad++;
 			}
 			break;
 		case("CirSen -> BREAK ;"):
 			if(true) {
 				breakList.peek().add(nextQuad);
-				curIns.add("\tjmp");
+				curIns.add("jmp");
 				nextQuad++;
 				ArrayList<Integer> nList = new ArrayList<Integer>();
 				nextList.push(nList);
@@ -728,7 +1386,7 @@ public class SemanticAnalyzer {
 		case("CirSen -> CONTINUE ;"):
 			if(true) {
 				continueList.peek().add(nextQuad);
-				curIns.add("\tjmp");
+				curIns.add("jmp");
 				nextQuad++;
 				ArrayList<Integer> nList = new ArrayList<Integer>();
 				nextList.push(nList);
@@ -738,7 +1396,7 @@ public class SemanticAnalyzer {
 			if(true) {
 				callID = LexicalAnalyzer.mySignTable.get(IDStack.pop());
 				callParas = 0;
-				if(!callID.equals("printf") && !callID.equals("scanf")) {
+				if(!callID.equals("printf") && !callID.equals("scanf") && !callID.equals("getchar")) {
 					callTable = curTable.parTable.getSign(callID).tablePtr;
 				}
 			}
@@ -748,28 +1406,135 @@ public class SemanticAnalyzer {
 		case("CallParaList1 -> Expr , CallParaList1"):
 		case("CallParaList -> Expr , CallParaList1"):
 			if(true) {
-				if(callID.equals("printf") || callID.equals("scanf")) {
+				if(callID.equals("printf")) {
 					Expr tmpExpr = exprStack.pop();
 					if(tmpExpr.type.equals("stringconst")) {
 						String tmpStr = tmpExpr.addr.substring(0, tmpExpr.addr.length() - 1) + "\\0\"";
 						data.add("LC" + dataNum + ": .ascii " +  tmpStr );
-						curIns.add("\tpushl $LC" + dataNum);
+						curIns.add("pushl $LC" + dataNum);
 						nextQuad++;
 						dataNum++;
 						callParas++;
-					}else if(tmpExpr.type.equals("int")) {
+					}else if(tmpExpr.type.equals("int") || tmpExpr.type.indexOf("intele") != -1) {
 						SignTable tmpTable = curTable;
 						int offset = SignTable.getOffset(tmpTable, tmpExpr.addr);
-						if(tmpTable.tableName.equals("global")) {
-							
+						if(offset == 0) {
+							curIns.add("movl " + tmpExpr.addr + ", %eax");
+							nextQuad++;
 						}else {
-							curIns.add("\tmovl " + (offset  + 1) + "(%esp), %eax");
+							curIns.add("movl " + offset + "(%ebp), %eax");
 							nextQuad++;
-							curIns.add("\tpushl %eax");
-							nextQuad++;
-							callParas++;
 						}
+						curIns.add("pushl %eax");
+						nextQuad++;
+						callParas++;
+					}else if(tmpExpr.type.equals("intconst")) {
+						curIns.add("movl $" + tmpExpr.addr + ", %eax");
+						nextQuad++;
+						curIns.add("pushl %eax");
+						nextQuad++;
+						callParas++;
+					}else if(tmpExpr.type.equals("float") || tmpExpr.type.indexOf("floatele") != -1) {
+						SignTable tmpTable = curTable;
+						int offset = SignTable.getOffset(tmpTable, tmpExpr.addr);
+						if(offset == 0) {
+							curIns.add("flds $" + tmpExpr.addr);
+							nextQuad++;
+						}else {
+							curIns.add("flds " + offset + "(%ebp)");
+							nextQuad++;
+						}
+						curIns.add("subl $8, %esp");
+						nextQuad++;
+						curIns.add("fstpl 0(%esp)");
+						nextQuad++;
+						callParas = callParas + 2;
+					}else if(tmpExpr.type.equals("floatconst")) {
+						data.add("LC" + dataNum + ": .float " +  tmpExpr.addr);
+						curIns.add("flds LC" + dataNum);
+						nextQuad++;
+						curIns.add("subl $8, %esp");
+						nextQuad++;
+						curIns.add("fstpl 0(%esp)");
+						nextQuad++;
+						callParas = callParas + 2;
+					}else if(tmpExpr.type.equals("char") || tmpExpr.type.indexOf("charele") != -1) {
+						SignTable tmpTable = curTable;
+						int offset = SignTable.getOffset(tmpTable, tmpExpr.addr);
+						if(offset == 0) {
+							curIns.add("movl " + tmpExpr.addr + ", %eax");
+							nextQuad++;
+						}else {
+							curIns.add("movl " + offset + "(%ebp), %eax");
+							nextQuad++;
+						}
+						curIns.add("pushl %eax");
+						nextQuad++;
+						callParas++;
+					}else if(tmpExpr.type.equals("charconst")) {
+						
 					}
+				}else if(callID.equals("scanf")){
+					Expr tmpExpr = exprStack.pop();
+					if(tmpExpr.type.equals("stringconst")) {
+						String tmpStr = tmpExpr.addr.substring(0, tmpExpr.addr.length() - 1) + "\\0\"";
+						data.add("LC" + dataNum + ": .ascii " +  tmpStr );
+						curIns.add("pushl $LC" + dataNum);
+						nextQuad++;
+						dataNum++;
+						callParas++;
+					}else if(tmpExpr.type.equals("int") || tmpExpr.type.equals("float")) {
+						SignTable tmpTable = curTable;
+						int offset = SignTable.getOffset(tmpTable, tmpExpr.addr);
+						if(offset == 0) {
+							curIns.add("movl $" + tmpExpr.addr + ", %eax");
+							nextQuad++;
+						}else {
+							curIns.add("leal " + offset + "(%ebp), %eax");
+							nextQuad++;
+						}
+						curIns.add("pushl %eax");
+						nextQuad++;
+						callParas++;
+					}else if(tmpExpr.type.equals("intconst")) {
+						System.err.println("参数错误!");
+					}else if(tmpExpr.type.equals("floatconst")) {
+						System.err.println("参数错误!");
+					}else if(tmpExpr.type.equals("char")) {
+						SignTable tmpTable = curTable;
+						int offset = SignTable.getOffset(tmpTable, tmpExpr.addr);
+						if(offset == 0) {
+							curIns.add("movl $" + tmpExpr.addr + ", %eax");
+							nextQuad++;
+						}else {
+							curIns.add("movl $0, " + offset + "(%ebp)");
+							nextQuad++;
+							curIns.add("leal " + offset + "(%ebp), %eax");
+							nextQuad++;
+						}
+						curIns.add("pushl %eax");
+						nextQuad++;
+						callParas++;
+					}else if(tmpExpr.type.equals("charconst")) {
+						System.err.println("参数错误!");
+					}else if(tmpExpr.type.equals("charele")) {
+						curIns.add("movl $0, " + curTable.getSign(tmpExpr.addr).arrayAd);
+						nextQuad++;
+						curIns.add("leal " + curTable.getSign(tmpExpr.addr).arrayAd + ", %eax");
+						nextQuad++;
+						curIns.add("pushl %eax");
+						nextQuad++;
+						callParas++;
+					}else if(tmpExpr.type.indexOf("ele") != -1) {
+						curIns.add("leal " + curTable.getSign(tmpExpr.addr).arrayAd + ", %eax");
+						nextQuad++;
+						curIns.add("pushl %eax");
+						nextQuad++;
+						callParas++;
+					}
+				}else if(callID.equals("getchar")){
+					curIns.add("call _getchar");
+					nextQuad++;
 				}else {
 					if(callParas >= callTable.paras) {
 						System.err.println(callID + "参数数量不匹配");
@@ -778,7 +1543,7 @@ public class SemanticAnalyzer {
 					}else {
 						Expr tmpExpr = exprStack.pop();
 						SignTable tmpTable = curTable;
-						String tmpIns = "\tpushl " + (SignTable.getOffset(tmpTable, tmpExpr.addr) + 1) + "(%esp)";
+						String tmpIns = "pushl " + SignTable.getOffset(tmpTable, tmpExpr.addr) + "(%ebp)";
 						curIns.add(tmpIns);
 						nextQuad++;
 						callParas++;
@@ -790,17 +1555,13 @@ public class SemanticAnalyzer {
 			if(true) {
 				ArrayList<Integer> nList = new ArrayList<Integer>();
 				nextList.push(nList);
-				if(callID.equals("printf") || callID.equals("scanf")) {
-					curIns.add("\tcall _" + callID);
-					nextQuad++;
-				}else {
-					curIns.add("\tcall " + callID);
-					nextQuad++;
-				}
-				for(int i = 0; i <= callParas - 1; i++) {
-					curIns.add("\tpopl %eax");
+				curIns.add("call _" + callID);
+				nextQuad++;
+				if(callParas != 0) {
+					curIns.add("addl $" + (callParas * 4) + ", %esp");
 					nextQuad++;
 				}
+				callParas = 0;
 			}
 			break;
 		}
@@ -825,12 +1586,48 @@ public class SemanticAnalyzer {
 	}
 	
 	public void outputIns(String fileName) throws IOException {
+		for(Sign tmpSign : curTable.signList) {
+			if(!tmpSign.type.equals("table")) {
+				if(tmpSign.type.indexOf("_array") != -1) {
+					String tmpStr = tmpSign.idName + ": ";
+					if(tmpSign.type.indexOf("int") != -1) {
+						tmpStr =  tmpStr + ".int ";
+					}else if(tmpSign.type.indexOf("float") != -1) {
+						tmpStr =  tmpStr + ".float ";
+					}else {
+						tmpStr =  tmpStr + ".int ";
+					}
+					for(int i = 0; i < tmpSign.dimens; i++) {
+						tmpStr =  tmpStr + "0, ";
+					}
+					tmpStr = tmpStr.substring(0, tmpStr.lastIndexOf(","));
+					data.add(tmpStr);
+				}else {
+					if(tmpSign.type.equals("int")) {
+						String tmpStr = tmpSign.idName + ": .int 0";
+						data.add(tmpStr);
+					}else if(tmpSign.type.equals("float")) {
+						String tmpStr = tmpSign.idName + ": .float 0";
+						data.add(tmpStr);
+					}else {
+						String tmpStr = tmpSign.idName + ": .int 0";
+						data.add(tmpStr);
+					}
+				}
+			}
+		}
 		BufferedWriter out = new BufferedWriter(new FileWriter(fileName));
 		for(String tmpIns : data ){
-	         out.write(tmpIns + "\r\n");
+	        out.write(tmpIns + "\r\n");
 	    }
 		for(String tmpIns : instructions ){
-	         out.write(tmpIns + "\r\n");
+			if(tmpIns.charAt(0) == '.') {
+				out.write("\r\n" + tmpIns + "\r\n");
+			}else if(tmpIns.charAt(0) == '_' || tmpIns.charAt(0) == 'L'){
+				out.write(tmpIns + "\r\n");
+			}else {
+		        out.write("\t" + tmpIns + "\r\n");
+			}
 	    }
 		out.close();
 	}

@@ -6,6 +6,7 @@ public class Sign {
 	public int offset;
 	public SignTable tablePtr;
 	public int dimens;
+	public String arrayAd;
 	
 	public Sign() {
 		this.idName = null;
@@ -13,5 +14,6 @@ public class Sign {
 		this.offset = 0;
 		this.tablePtr = null;
 		this.dimens = 0;
+		this.arrayAd = null;
 	}
 }

@@ -3,7 +3,6 @@
 /.classpath
 /.project
 /123.txt
-/asm.s
 /First.txt
 /gram.txt
 /grammar.txt
@@ -14,7 +13,6 @@
 /ProductOrder.txt
 /ProductOrder1.txt
 /SignTable.txt
-/src.c
 /src_test.c
 /src0.c
 /State.txt
