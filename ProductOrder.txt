@@ -15,17 +15,100 @@ Idlist -> Id1
 读入;转移到22
 DeclareS -> Type Idlist ;
 M0 -> @
-读入CHAR转移到9
-Type -> CHAR
+读入FLOAT转移到8
+Type -> FLOAT
 读入ID转移到14
-读入[转移到24
-读入INTCONST转移到31
-读入]转移到36
-Id2 -> ID [ INTCONST ]
-Idlist -> Id2
-读入;转移到22
+M2 -> @
+读入(转移到30
+读入FLOAT转移到8
+Type -> FLOAT
+读入ID转移到39
+读入,转移到42
+读入FLOAT转移到8
+Type -> FLOAT
+读入ID转移到69
+ParaList1 -> Type ID
+ParaList -> Type ID , ParaList1
+读入)转移到38
+读入{转移到41
+读入FLOAT转移到8
+Type -> FLOAT
+读入ID转移到28
+Id1 -> ID
+Idlist -> Id1
+读入;转移到72
 DeclareS -> Type Idlist ;
-M0 -> @
+读入ID转移到51
+读入=转移到66
+读入ID转移到90
+Expr2 -> ID
+Expr1 -> Expr2
+Expr -> Expr1
+读入;转移到140
+AssignS -> ID = Expr ;
+读入IF转移到52
+读入(转移到67
+读入ID转移到103
+Expr2 -> ID
+Expr1 -> Expr2
+Expr -> Expr1
+读入>=转移到157
+Condop -> >=
+读入ID转移到216
+Expr2 -> ID
+Expr1 -> Expr2
+Expr -> Expr1
+BoolE3 -> Expr Condop Expr
+BoolE2 -> BoolE3
+BoolE1 -> BoolE2
+BoolE -> BoolE1
+读入)转移到148
+M3 -> @
+读入{转移到263
+读入ID转移到300
+读入=转移到328
+读入ID转移到90
+Expr2 -> ID
+Expr1 -> Expr2
+Expr -> Expr1
+读入;转移到377
+AssignS -> ID = Expr ;
+Sen -> @
+Sen -> AssignS Sen
+IfSen -> Sen
+读入}转移到321
+N1 -> @
+读入ELSE转移到373
+M3 -> @
+读入{转移到401
+读入ID转移到300
+读入=转移到328
+读入ID转移到90
+Expr2 -> ID
+Expr1 -> Expr2
+Expr -> Expr1
+读入;转移到377
+AssignS -> ID = Expr ;
+Sen -> @
+Sen -> AssignS Sen
+IfSen -> Sen
+读入}转移到418
+IfS -> IF ( BoolE ) M3 { IfSen } N1 ELSE M3 { IfSen }
+M3 -> @
+Sen -> @
+Sen -> IfS M3 Sen
+Sen -> AssignS Sen
+Sen -> DeclareS Sen
+M3 -> @
+读入RETURN转移到74
+读入ID转移到90
+Expr2 -> ID
+Expr1 -> Expr2
+Expr -> Expr1
+读入;转移到176
+读入}转移到238
+FuncDef -> Type ID M2 ( ParaList ) { Sen M3 RETURN Expr ; }
+FuncList -> FuncDef
 读入INT转移到10
 读入MAIN转移到19
 M1 -> @
@@ -33,8 +116,25 @@ M1 -> @
 ParaList -> @
 读入)转移到40
 读入{转移到43
-读入INT转移到35
-Type -> INT
+读入CHAR转移到9
+Type -> CHAR
+读入ID转移到28
+读入[转移到24
+读入INTCONST转移到31
+读入]转移到36
+Id2 -> ID [ INTCONST ]
+Idlist -> Id2
+读入;转移到72
+DeclareS -> Type Idlist ;
+读入FLOAT转移到8
+Type -> FLOAT
+读入ID转移到28
+Id1 -> ID
+Idlist -> Id1
+读入;转移到72
+DeclareS -> Type Idlist ;
+读入FLOAT转移到8
+Type -> FLOAT
 读入ID转移到28
 Id1 -> ID
 Idlist -> Id1
@@ -55,6 +155,181 @@ Expr1 -> Expr2
 Expr -> Expr1
 读入;转移到140
 AssignS -> ID = Expr ;
+读入ID转移到51
+C1 -> @
+读入(转移到75
+读入STRINGCONST转移到116
+Expr2 -> STRINGCONST
+Expr1 -> Expr2
+Expr -> Expr1
+CallParaList -> Expr
+读入)转移到177
+读入;转移到239
+CallS -> ID C1 ( CallParaList ) ;
+读入WHILE转移到53
+M4 -> @
+读入(转移到108
+读入ID转移到103
+Expr2 -> ID
+Expr1 -> Expr2
+Expr -> Expr1
+读入<转移到154
+Condop -> <
+读入INTCONST转移到217
+Expr2 -> INTCONST
+Expr1 -> Expr2
+Expr -> Expr1
+BoolE3 -> Expr Condop Expr
+BoolE2 -> BoolE3
+BoolE1 -> BoolE2
+BoolE -> BoolE1
+读入)转移到236
+M3 -> @
+读入{转移到314
+读入ID转移到343
+C1 -> @
+读入(转移到384
+读入STRINGCONST转移到116
+Expr2 -> STRINGCONST
+Expr1 -> Expr2
+Expr -> Expr1
+读入,转移到179
+读入ID转移到118
+读入[转移到184
+读入ID转移到81
+Expr2 -> ID
+Expr1 -> Expr2
+Expr -> Expr1
+读入]转移到286
+Expr2 -> ID [ Expr ]
+Expr1 -> Expr2
+Expr -> Expr1
+CallParaList1 -> Expr
+CallParaList -> Expr , CallParaList1
+读入)转移到406
+读入;转移到414
+CallS -> ID C1 ( CallParaList ) ;
+读入ID转移到343
+C1 -> @
+读入(转移到384
+CallParaList -> @
+读入)转移到406
+读入;转移到414
+CallS -> ID C1 ( CallParaList ) ;
+读入ID转移到343
+读入=转移到369
+读入ID转移到90
+Expr2 -> ID
+Expr1 -> Expr2
+Expr -> Expr1
+读入+转移到138
+读入INTCONST转移到91
+Expr2 -> INTCONST
+Expr1 -> Expr2
+Expr -> Expr + Expr1
+读入;转移到397
+AssignS -> ID = Expr ;
+CirSen -> @
+CirSen -> AssignS CirSen
+CirSen -> CallS CirSen
+CirSen -> CallS CirSen
+读入}转移到358
+WhileS -> WHILE M4 ( BoolE ) M3 { CirSen }
+M3 -> @
+读入ID转移到51
+读入=转移到66
+读入INTCONST转移到91
+Expr2 -> INTCONST
+Expr1 -> Expr2
+Expr -> Expr1
+读入;转移到140
+AssignS -> ID = Expr ;
+读入ID转移到51
+C1 -> @
+读入(转移到75
+读入STRINGCONST转移到116
+Expr2 -> STRINGCONST
+Expr1 -> Expr2
+Expr -> Expr1
+CallParaList -> Expr
+读入)转移到177
+读入;转移到239
+CallS -> ID C1 ( CallParaList ) ;
+读入WHILE转移到53
+M4 -> @
+读入(转移到108
+读入ID转移到103
+Expr2 -> ID
+Expr1 -> Expr2
+Expr -> Expr1
+读入<转移到154
+Condop -> <
+读入INTCONST转移到217
+Expr2 -> INTCONST
+Expr1 -> Expr2
+Expr -> Expr1
+BoolE3 -> Expr Condop Expr
+BoolE2 -> BoolE3
+BoolE1 -> BoolE2
+BoolE -> BoolE1
+读入)转移到236
+M3 -> @
+读入{转移到314
+读入ID转移到343
+C1 -> @
+读入(转移到384
+读入STRINGCONST转移到116
+Expr2 -> STRINGCONST
+Expr1 -> Expr2
+Expr -> Expr1
+读入,转移到179
+读入ID转移到118
+Expr2 -> ID
+Expr1 -> Expr2
+Expr -> Expr1
+读入,转移到284
+读入ID转移到118
+读入[转移到184
+读入ID转移到81
+Expr2 -> ID
+Expr1 -> Expr2
+Expr -> Expr1
+读入]转移到286
+Expr2 -> ID [ Expr ]
+Expr1 -> Expr2
+Expr -> Expr1
+CallParaList1 -> Expr
+CallParaList1 -> Expr , CallParaList1
+CallParaList -> Expr , CallParaList1
+读入)转移到406
+读入;转移到414
+CallS -> ID C1 ( CallParaList ) ;
+读入ID转移到343
+读入=转移到369
+读入ID转移到90
+Expr2 -> ID
+Expr1 -> Expr2
+Expr -> Expr1
+读入+转移到138
+读入INTCONST转移到91
+Expr2 -> INTCONST
+Expr1 -> Expr2
+Expr -> Expr + Expr1
+读入;转移到397
+AssignS -> ID = Expr ;
+CirSen -> @
+CirSen -> AssignS CirSen
+CirSen -> CallS CirSen
+读入}转移到358
+WhileS -> WHILE M4 ( BoolE ) M3 { CirSen }
+M3 -> @
+读入INT转移到35
+Type -> INT
+读入ID转移到28
+Id1 -> ID
+Idlist -> Id1
+读入;转移到72
+DeclareS -> Type Idlist ;
 读入ID转移到51
 读入=转移到66
 读入INTCONST转移到91
@@ -70,8 +345,8 @@ M4 -> @
 Expr2 -> ID
 Expr1 -> Expr2
 Expr -> Expr1
-读入==转移到151
-Condop -> ==
+读入!=转移到155
+Condop -> !=
 读入INTCONST转移到217
 Expr2 -> INTCONST
 Expr1 -> Expr2
@@ -85,17 +360,146 @@ M3 -> @
 读入{转移到314
 读入ID转移到343
 读入=转移到369
+读入INTCONST转移到91
+Expr2 -> INTCONST
+Expr1 -> Expr2
+Expr -> Expr1
+读入;转移到397
+AssignS -> ID = Expr ;
+读入ID转移到343
+读入=转移到369
+读入INTCONST转移到91
+Expr2 -> INTCONST
+Expr1 -> Expr2
+Expr -> Expr1
+读入;转移到397
+AssignS -> ID = Expr ;
+读入WHILE转移到346
+M4 -> @
+读入(转移到388
+读入ID转移到103
+Expr2 -> ID
+Expr1 -> Expr2
+Expr -> Expr1
+读入<转移到154
+Condop -> <
+读入INTCONST转移到217
+Expr2 -> INTCONST
+Expr1 -> Expr2
+Expr -> Expr1
+读入-转移到265
+读入INTCONST转移到217
+Expr2 -> INTCONST
+Expr1 -> Expr2
+Expr -> Expr - Expr1
+BoolE3 -> Expr Condop Expr
+BoolE2 -> BoolE3
+BoolE1 -> BoolE2
+BoolE -> BoolE1
+读入)转移到409
+M3 -> @
+读入{转移到423
+读入IF转移到344
+读入(转移到370
+读入ID转移到103
+读入[转移到161
+读入ID转移到81
+Expr2 -> ID
+Expr1 -> Expr2
+Expr -> Expr1
+读入]转移到273
+Expr2 -> ID [ Expr ]
+Expr1 -> Expr2
+Expr -> Expr1
+读入>转移到156
+Condop -> >
+读入ID转移到216
+读入[转移到269
+读入ID转移到81
+Expr2 -> ID
+Expr1 -> Expr2
+Expr -> Expr1
+读入+转移到123
+读入INTCONST转移到82
+Expr2 -> INTCONST
+Expr1 -> Expr2
+Expr -> Expr + Expr1
+读入]转移到332
+Expr2 -> ID [ Expr ]
+Expr1 -> Expr2
+Expr -> Expr1
+BoolE3 -> Expr Condop Expr
+BoolE2 -> BoolE3
+BoolE1 -> BoolE2
+BoolE -> BoolE1
+读入)转移到398
+M3 -> @
+读入{转移到416
+读入CHAR转移到9
+Type -> CHAR
+读入ID转移到28
+Id1 -> ID
+Idlist -> Id1
+读入;转移到382
+DeclareS -> Type Idlist ;
+读入ID转移到343
+读入=转移到369
+读入ID转移到90
+读入[转移到144
+读入ID转移到81
+Expr2 -> ID
+Expr1 -> Expr2
+Expr -> Expr1
+读入]转移到260
+Expr2 -> ID [ Expr ]
+Expr1 -> Expr2
+Expr -> Expr1
+读入;转移到397
+AssignS -> ID = Expr ;
+读入ID转移到343
+读入[转移到368
+读入ID转移到81
+Expr2 -> ID
+Expr1 -> Expr2
+Expr -> Expr1
+读入]转移到396
+读入=转移到407
+读入ID转移到90
+读入[转移到144
+读入ID转移到81
+Expr2 -> ID
+Expr1 -> Expr2
+Expr -> Expr1
+读入+转移到123
+读入INTCONST转移到82
+Expr2 -> INTCONST
+Expr1 -> Expr2
+Expr -> Expr + Expr1
+读入]转移到260
+Expr2 -> ID [ Expr ]
+Expr1 -> Expr2
+Expr -> Expr1
+读入;转移到421
+AssignS -> ID [ Expr ] = Expr ;
+读入ID转移到343
+读入[转移到368
+读入ID转移到81
+Expr2 -> ID
+Expr1 -> Expr2
+Expr -> Expr1
+读入+转移到123
+读入INTCONST转移到82
+Expr2 -> INTCONST
+Expr1 -> Expr2
+Expr -> Expr + Expr1
+读入]转移到396
+读入=转移到407
 读入ID转移到90
 Expr2 -> ID
 Expr1 -> Expr2
 Expr -> Expr1
-读入+转移到138
-读入ID转移到90
-Expr2 -> ID
-Expr1 -> Expr2
-Expr -> Expr + Expr1
-读入;转移到397
-AssignS -> ID = Expr ;
+读入;转移到421
+AssignS -> ID [ Expr ] = Expr ;
 读入ID转移到343
 读入=转移到369
 读入ID转移到90
@@ -105,6 +509,403 @@ Expr -> Expr1
 读入+转移到138
 读入INTCONST转移到91
 Expr2 -> INTCONST
+Expr1 -> Expr2
+Expr -> Expr + Expr1
+读入;转移到397
+AssignS -> ID = Expr ;
+CirSen -> @
+CirSen -> AssignS CirSen
+CirSen -> AssignS CirSen
+CirSen -> AssignS CirSen
+CirSen -> AssignS CirSen
+CirSen -> DeclareS CirSen
+读入}转移到426
+CirIfS -> IF ( BoolE ) M3 { CirSen }
+M3 -> @
+读入ID转移到343
+读入=转移到369
+读入ID转移到90
+Expr2 -> ID
+Expr1 -> Expr2
+Expr -> Expr1
+读入+转移到138
+读入INTCONST转移到91
+Expr2 -> INTCONST
+Expr1 -> Expr2
+Expr -> Expr + Expr1
+读入;转移到397
+AssignS -> ID = Expr ;
+CirSen -> @
+CirSen -> AssignS CirSen
+CirSen -> CirIfS M3 CirSen
+读入}转移到430
+WhileS -> WHILE M4 ( BoolE ) M3 { CirSen }
+M3 -> @
+CirSen -> @
+CirSen -> WhileS M3 CirSen
+CirSen -> AssignS CirSen
+CirSen -> AssignS CirSen
+读入}转移到358
+WhileS -> WHILE M4 ( BoolE ) M3 { CirSen }
+M3 -> @
+读入ID转移到51
+C1 -> @
+读入(转移到75
+读入STRINGCONST转移到116
+Expr2 -> STRINGCONST
+Expr1 -> Expr2
+Expr -> Expr1
+CallParaList -> Expr
+读入)转移到177
+读入;转移到239
+CallS -> ID C1 ( CallParaList ) ;
+读入ID转移到51
+读入=转移到66
+读入INTCONST转移到91
+Expr2 -> INTCONST
+Expr1 -> Expr2
+Expr -> Expr1
+读入;转移到140
+AssignS -> ID = Expr ;
+读入WHILE转移到53
+M4 -> @
+读入(转移到108
+读入ID转移到103
+Expr2 -> ID
+Expr1 -> Expr2
+Expr -> Expr1
+读入<转移到154
+Condop -> <
+读入INTCONST转移到217
+Expr2 -> INTCONST
+Expr1 -> Expr2
+Expr -> Expr1
+BoolE3 -> Expr Condop Expr
+BoolE2 -> BoolE3
+BoolE1 -> BoolE2
+BoolE -> BoolE1
+读入)转移到236
+M3 -> @
+读入{转移到314
+读入ID转移到343
+C1 -> @
+读入(转移到384
+读入STRINGCONST转移到116
+Expr2 -> STRINGCONST
+Expr1 -> Expr2
+Expr -> Expr1
+读入,转移到179
+读入ID转移到118
+Expr2 -> ID
+Expr1 -> Expr2
+Expr -> Expr1
+读入,转移到284
+读入ID转移到118
+读入[转移到184
+读入ID转移到81
+Expr2 -> ID
+Expr1 -> Expr2
+Expr -> Expr1
+读入]转移到286
+Expr2 -> ID [ Expr ]
+Expr1 -> Expr2
+Expr -> Expr1
+CallParaList1 -> Expr
+CallParaList1 -> Expr , CallParaList1
+CallParaList -> Expr , CallParaList1
+读入)转移到406
+读入;转移到414
+CallS -> ID C1 ( CallParaList ) ;
+读入ID转移到343
+读入=转移到369
+读入ID转移到90
+Expr2 -> ID
+Expr1 -> Expr2
+Expr -> Expr1
+读入+转移到138
+读入INTCONST转移到91
+Expr2 -> INTCONST
+Expr1 -> Expr2
+Expr -> Expr + Expr1
+读入;转移到397
+AssignS -> ID = Expr ;
+CirSen -> @
+CirSen -> AssignS CirSen
+CirSen -> CallS CirSen
+读入}转移到358
+WhileS -> WHILE M4 ( BoolE ) M3 { CirSen }
+M3 -> @
+读入ID转移到51
+C1 -> @
+读入(转移到75
+读入STRINGCONST转移到116
+Expr2 -> STRINGCONST
+Expr1 -> Expr2
+Expr -> Expr1
+CallParaList -> Expr
+读入)转移到177
+读入;转移到239
+CallS -> ID C1 ( CallParaList ) ;
+读入ID转移到51
+C1 -> @
+读入(转移到75
+读入STRINGCONST转移到116
+Expr2 -> STRINGCONST
+Expr1 -> Expr2
+Expr -> Expr1
+读入,转移到179
+读入ID转移到118
+Expr2 -> ID
+Expr1 -> Expr2
+Expr -> Expr1
+CallParaList1 -> Expr
+CallParaList -> Expr , CallParaList1
+读入)转移到177
+读入;转移到239
+CallS -> ID C1 ( CallParaList ) ;
+读入ID转移到51
+C1 -> @
+读入(转移到75
+读入STRINGCONST转移到116
+Expr2 -> STRINGCONST
+Expr1 -> Expr2
+Expr -> Expr1
+CallParaList -> Expr
+读入)转移到177
+读入;转移到239
+CallS -> ID C1 ( CallParaList ) ;
+读入ID转移到51
+C1 -> @
+读入(转移到75
+读入STRINGCONST转移到116
+Expr2 -> STRINGCONST
+Expr1 -> Expr2
+Expr -> Expr1
+读入,转移到179
+读入ID转移到118
+Expr2 -> ID
+Expr1 -> Expr2
+Expr -> Expr1
+CallParaList1 -> Expr
+CallParaList -> Expr , CallParaList1
+读入)转移到177
+读入;转移到239
+CallS -> ID C1 ( CallParaList ) ;
+读入ID转移到51
+C1 -> @
+读入(转移到75
+读入STRINGCONST转移到116
+Expr2 -> STRINGCONST
+Expr1 -> Expr2
+Expr -> Expr1
+读入,转移到179
+读入ID转移到118
+Expr2 -> ID
+Expr1 -> Expr2
+Expr -> Expr1
+CallParaList1 -> Expr
+CallParaList -> Expr , CallParaList1
+读入)转移到177
+读入;转移到239
+CallS -> ID C1 ( CallParaList ) ;
+读入ID转移到51
+C1 -> @
+读入(转移到75
+读入STRINGCONST转移到116
+Expr2 -> STRINGCONST
+Expr1 -> Expr2
+Expr -> Expr1
+读入,转移到179
+读入ID转移到118
+Expr2 -> ID
+Expr1 -> Expr2
+Expr -> Expr1
+CallParaList1 -> Expr
+CallParaList -> Expr , CallParaList1
+读入)转移到177
+读入;转移到239
+CallS -> ID C1 ( CallParaList ) ;
+读入FLOAT转移到8
+Type -> FLOAT
+读入ID转移到28
+Id1 -> ID
+Idlist -> Id1
+读入;转移到72
+DeclareS -> Type Idlist ;
+读入ID转移到51
+读入=转移到66
+读入ID转移到90
+C1 -> @
+读入(转移到205
+读入ID转移到118
+Expr2 -> ID
+Expr1 -> Expr2
+Expr -> Expr1
+读入,转移到179
+读入ID转移到118
+Expr2 -> ID
+Expr1 -> Expr2
+Expr -> Expr1
+CallParaList1 -> Expr
+CallParaList -> Expr , CallParaList1
+读入)转移到291
+Expr2 -> ID C1 ( CallParaList )
+Expr1 -> Expr2
+Expr -> Expr1
+读入;转移到140
+AssignS -> ID = Expr ;
+读入ID转移到51
+C1 -> @
+读入(转移到75
+读入STRINGCONST转移到116
+Expr2 -> STRINGCONST
+Expr1 -> Expr2
+Expr -> Expr1
+读入,转移到179
+读入ID转移到118
+Expr2 -> ID
+Expr1 -> Expr2
+Expr -> Expr1
+CallParaList1 -> Expr
+CallParaList -> Expr , CallParaList1
+读入)转移到177
+读入;转移到239
+CallS -> ID C1 ( CallParaList ) ;
+读入ID转移到51
+C1 -> @
+读入(转移到75
+读入STRINGCONST转移到116
+Expr2 -> STRINGCONST
+Expr1 -> Expr2
+Expr -> Expr1
+CallParaList -> Expr
+读入)转移到177
+读入;转移到239
+CallS -> ID C1 ( CallParaList ) ;
+读入ID转移到51
+C1 -> @
+读入(转移到75
+读入STRINGCONST转移到116
+Expr2 -> STRINGCONST
+Expr1 -> Expr2
+Expr -> Expr1
+读入,转移到179
+读入ID转移到118
+Expr2 -> ID
+Expr1 -> Expr2
+Expr -> Expr1
+CallParaList1 -> Expr
+CallParaList -> Expr , CallParaList1
+读入)转移到177
+读入;转移到239
+CallS -> ID C1 ( CallParaList ) ;
+读入FLOAT转移到8
+Type -> FLOAT
+读入ID转移到28
+Id1 -> ID
+Idlist -> Id1
+读入;转移到72
+DeclareS -> Type Idlist ;
+读入ID转移到51
+读入=转移到66
+读入REALCONST转移到93
+Expr2 -> REALCONST
+Expr1 -> Expr2
+Expr -> Expr1
+读入;转移到140
+AssignS -> ID = Expr ;
+读入ID转移到51
+读入=转移到66
+读入REALCONST转移到93
+Expr2 -> REALCONST
+Expr1 -> Expr2
+Expr -> Expr1
+读入;转移到140
+AssignS -> ID = Expr ;
+读入WHILE转移到53
+M4 -> @
+读入(转移到108
+读入ID转移到103
+Expr2 -> ID
+Expr1 -> Expr2
+Expr -> Expr1
+读入<转移到154
+Condop -> <
+读入ID转移到216
+Expr2 -> ID
+Expr1 -> Expr2
+Expr -> Expr1
+BoolE3 -> Expr Condop Expr
+BoolE2 -> BoolE3
+BoolE1 -> BoolE2
+BoolE -> BoolE1
+读入)转移到236
+M3 -> @
+读入{转移到314
+读入IF转移到344
+读入(转移到370
+读入ID转移到103
+Expr2 -> ID
+Expr1 -> Expr2
+读入/转移到159
+读入REALCONST转移到107
+Expr2 -> REALCONST
+Expr1 -> Expr1 / Expr2
+Expr -> Expr1
+读入==转移到151
+Condop -> ==
+读入INTCONST转移到217
+Expr2 -> INTCONST
+Expr1 -> Expr2
+Expr -> Expr1
+BoolE3 -> Expr Condop Expr
+BoolE2 -> BoolE3
+BoolE1 -> BoolE2
+BoolE -> BoolE1
+读入)转移到398
+M3 -> @
+读入{转移到416
+读入ID转移到343
+读入=转移到369
+读入ID转移到90
+Expr2 -> ID
+Expr1 -> Expr2
+Expr -> Expr1
+读入+转移到138
+读入INTCONST转移到91
+Expr2 -> INTCONST
+Expr1 -> Expr2
+Expr -> Expr + Expr1
+读入;转移到397
+AssignS -> ID = Expr ;
+读入ID转移到343
+C1 -> @
+读入(转移到384
+读入STRINGCONST转移到116
+Expr2 -> STRINGCONST
+Expr1 -> Expr2
+Expr -> Expr1
+CallParaList -> Expr
+读入)转移到406
+读入;转移到414
+CallS -> ID C1 ( CallParaList ) ;
+读入CONTINUE转移到345
+读入;转移到371
+CirSen -> CONTINUE ;
+CirSen -> CallS CirSen
+CirSen -> AssignS CirSen
+读入}转移到426
+CirIfS -> IF ( BoolE ) M3 { CirSen }
+M3 -> @
+读入ID转移到343
+读入=转移到369
+读入ID转移到90
+Expr2 -> ID
+Expr1 -> Expr2
+Expr -> Expr1
+读入+转移到138
+读入ID转移到90
+Expr2 -> ID
 Expr1 -> Expr2
 Expr -> Expr + Expr1
 读入;转移到397
@@ -126,10 +927,50 @@ CallParaList -> Expr , CallParaList1
 读入)转移到406
 读入;转移到414
 CallS -> ID C1 ( CallParaList ) ;
+读入ID转移到343
+读入=转移到369
+读入ID转移到90
+Expr2 -> ID
+Expr1 -> Expr2
+Expr -> Expr1
+读入+转移到138
+读入INTCONST转移到91
+Expr2 -> INTCONST
+Expr1 -> Expr2
+Expr -> Expr + Expr1
+读入;转移到397
+AssignS -> ID = Expr ;
+读入IF转移到344
+读入(转移到370
+读入ID转移到103
+Expr2 -> ID
+Expr1 -> Expr2
+Expr -> Expr1
+读入>=转移到157
+Condop -> >=
+读入INTCONST转移到217
+Expr2 -> INTCONST
+Expr1 -> Expr2
+Expr -> Expr1
+BoolE3 -> Expr Condop Expr
+BoolE2 -> BoolE3
+BoolE1 -> BoolE2
+BoolE -> BoolE1
+读入)转移到398
+M3 -> @
+读入{转移到416
+读入BREAK转移到342
+读入;转移到366
+CirSen -> BREAK ;
+读入}转移到426
+CirIfS -> IF ( BoolE ) M3 { CirSen }
+M3 -> @
 CirSen -> @
+CirSen -> CirIfS M3 CirSen
+CirSen -> AssignS CirSen
 CirSen -> CallS CirSen
 CirSen -> AssignS CirSen
-CirSen -> AssignS CirSen
+CirSen -> CirIfS M3 CirSen
 读入}转移到358
 WhileS -> WHILE M4 ( BoolE ) M3 { CirSen }
 M3 -> @
@@ -156,6 +997,32 @@ Sen -> WhileS M3 Sen
 Sen -> AssignS Sen
 Sen -> AssignS Sen
 Sen -> DeclareS Sen
+Sen -> CallS Sen
+Sen -> CallS Sen
+Sen -> CallS Sen
+Sen -> AssignS Sen
+Sen -> DeclareS Sen
+Sen -> CallS Sen
+Sen -> CallS Sen
+Sen -> CallS Sen
+Sen -> CallS Sen
+Sen -> CallS Sen
+Sen -> CallS Sen
+Sen -> WhileS M3 Sen
+Sen -> AssignS Sen
+Sen -> CallS Sen
+Sen -> WhileS M3 Sen
+Sen -> AssignS Sen
+Sen -> DeclareS Sen
+Sen -> WhileS M3 Sen
+Sen -> CallS Sen
+Sen -> AssignS Sen
+Sen -> WhileS M3 Sen
+Sen -> CallS Sen
+Sen -> AssignS Sen
+Sen -> DeclareS Sen
+Sen -> DeclareS Sen
+Sen -> DeclareS Sen
 Sen -> DeclareS Sen
 M3 -> @
 读入RETURN转移到110
@@ -166,7 +1033,6 @@ Expr -> Expr1
 读入;转移到237
 读入}转移到283
 MainDef -> INT MAIN M1 ( ParaList ) { Sen M3 RETURN Expr ; }
-Start -> M0 MainDef
-Start -> M0 DeclareS Start
+Start -> M0 FuncList MainDef
 Start -> M0 DeclareS Start
 Start -> M0 DeclareS Start

@@ -1,10 +1,13 @@
 package com.compiler;
 
+import java.awt.Desktop;
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
+import java.io.File;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.io.OutputStream;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -45,7 +48,7 @@ public class SyntacticAnalyzer {
         ArrayList<String> tokenList = generateTokenList("TokenTable.txt");
         analysis(tokenList);
         semAnalyzer.outputIns("asm.s");
-        //Runtime.getRuntime().exec("cmd.exe"); // 打开一个批处理文件
+        Desktop.getDesktop().open(new File("D:\\Java\\project\\Compiler\\asm.bat"));
 	}
 	
  	//初始化函数，从文件读取产生式
